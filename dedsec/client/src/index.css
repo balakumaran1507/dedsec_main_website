@@ -1,0 +1,68 @@
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Global Styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  @apply bg-terminal-bg text-terminal-text font-mono;
+  overflow-x: hidden;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-terminal-bg;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-matrix-dark rounded;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-matrix-green;
+}
+
+/* Terminal cursor effect */
+.terminal-cursor::after {
+  content: '█';
+  animation: blink 1s infinite;
+  @apply text-matrix-green;
+}
+
+@keyframes blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+
+/* Glowing green effect for inputs */
+input:focus,
+textarea:focus {
+  @apply outline-none ring-2 ring-matrix-green;
+}
+
+/* Terminal prompt style */
+.prompt::before {
+  content: '$ ';
+  @apply text-matrix-green;
+}
+
+/* Animation delays for thinking dots */
+.animation-delay-200 {
+  animation-delay: 0.2s;
+}
+
+.animation-delay-400 {
+  animation-delay: 0.4s;
+}
