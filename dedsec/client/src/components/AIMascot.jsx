@@ -45,11 +45,19 @@ const AI_RESPONSES = {
   ]
 };
 
-function AIMascot() {
+function AIMascot({ shouldOpen, onOpened }) {
   const [isOpen, setIsOpen] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
-  const [position, setPosition] = useState({ x: window.innerWidth - 120, y: 100 });
+  
+  // Default position (top right, peeking)
+  const getDefaultPosition = () => ({
+    x: window.innerWidth - 40,
+    y: 100
+  });
+  
+  const [position, setPosition] = useState(getDefaultPosition);
   const [isDragging, setIsDragging] = useState(false);
+  const [hasDragged, setHasDragged] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [commandInput, setCommandInput] = useState('');
   const [terminalOutput, setTerminalOutput] = useState([
@@ -60,6 +68,25 @@ function AIMascot() {
   const [isThinking, setIsThinking] = useState(false);
   const terminalRef = useRef(null);
   const inputRef = useRef(null);
+
+  // Open from command palette
+  useEffect(() => {
+    if (shouldOpen) {
+      setIsOpen(true);
+      // Adjust position if terminal would go off-screen
+      const windowWidth = 500;
+      const windowHeight = 600;
+      const maxX = window.innerWidth - windowWidth;
+      const maxY = window.innerHeight - windowHeight;
+      
+      setPosition(prev => ({
+        x: Math.max(0, Math.min(prev.x - 200, maxX)),
+        y: Math.max(0, Math.min(prev.y, maxY))
+      }));
+      
+      if (onOpened) onOpened();
+    }
+  }, [shouldOpen, onOpened]);
 
   // Auto-scroll terminal to bottom
   useEffect(() => {
@@ -79,6 +106,7 @@ function AIMascot() {
   const handleMouseDown = (e) => {
     if (e.target.closest('.drag-handle')) {
       setIsDragging(true);
+      setHasDragged(false);
       setDragOffset({
         x: e.clientX - position.x,
         y: e.clientY - position.y
@@ -88,10 +116,30 @@ function AIMascot() {
 
   const handleMouseMove = (e) => {
     if (isDragging) {
-      setPosition({
-        x: e.clientX - dragOffset.x,
-        y: e.clientY - dragOffset.y
-      });
+      setHasDragged(true); // Mark that user is dragging
+      let newX = e.clientX - dragOffset.x;
+      let newY = e.clientY - dragOffset.y;
+      
+      // Different boundaries for button vs terminal window
+      if (isOpen) {
+        // Terminal window is 500px wide, 600px tall
+        const windowWidth = 500;
+        const windowHeight = 600;
+        const maxX = window.innerWidth - windowWidth;
+        const maxY = window.innerHeight - windowHeight;
+        
+        newX = Math.max(0, Math.min(newX, maxX));
+        newY = Math.max(0, Math.min(newY, maxY));
+      } else {
+        // Button is 60px (smaller size)
+        const maxX = window.innerWidth - 30; // Allow peeking out
+        const maxY = window.innerHeight - 60;
+        
+        newX = Math.max(-30, Math.min(newX, maxX)); // Can peek out on left too
+        newY = Math.max(80, Math.min(newY, maxY)); // Stay below navbar (73px + padding)
+      }
+      
+      setPosition({ x: newX, y: newY });
     }
   };
 
@@ -160,10 +208,10 @@ function AIMascot() {
 
   return (
     <>
-      {/* Floating Skull Button */}
+      {/* Floating AI Button - Sleek & Peeking */}
       {!isOpen && (
         <div
-          className="fixed z-50 cursor-move select-none"
+          className="fixed z-40 cursor-move select-none transition-all duration-300"
           style={{
             left: `${position.x}px`,
             top: `${position.y}px`,
@@ -171,16 +219,38 @@ function AIMascot() {
           onMouseDown={handleMouseDown}
         >
           <button
-            onClick={() => setIsOpen(true)}
-            className="drag-handle bg-terminal-card border-2 border-matrix-green rounded-full p-4 shadow-lg hover:shadow-matrix-green/50 transition-all hover:scale-110 animate-pulse-slow"
+            onClick={() => {
+              // Only open if user didn't drag
+              if (!hasDragged) {
+                setIsOpen(true);
+                // Adjust position when opening to keep terminal in bounds
+                const windowWidth = 500;
+                const windowHeight = 600;
+                const maxX = window.innerWidth - windowWidth;
+                const maxY = window.innerHeight - windowHeight;
+                
+                setPosition(prev => ({
+                  x: Math.max(0, Math.min(prev.x - 200, maxX)),
+                  y: Math.max(0, Math.min(prev.y, maxY))
+                }));
+              }
+            }}
+            className="drag-handle group relative bg-terminal-card/30 backdrop-blur-sm border border-matrix-green/30 rounded-l-xl rounded-r-lg px-3 py-3 shadow-lg transition-all duration-300 hover:bg-terminal-card hover:border-matrix-green hover:shadow-matrix-green/50 hover:px-4 hover:scale-105 opacity-40 hover:opacity-100"
             title="Open AI Assistant"
           >
-            <Skull className="w-8 h-8 text-matrix-green" />
+            {/* Sharp terminal-style AI icon */}
+            <div className="w-6 h-6 text-matrix-green font-bold flex items-center justify-center text-xl">
+              <div className="relative">
+                <div className="absolute inset-0 bg-matrix-green/10 group-hover:bg-matrix-green/30 blur-sm rounded transition-all duration-300"></div>
+                <span className="relative group-hover:scale-110 transition-transform duration-300">⟨⟩</span>
+              </div>
+            </div>
           </button>
           
-          {/* Floating tooltip */}
-          <div className="absolute -bottom-12 left-1/2 transform -translate-x-1/2 bg-terminal-card border border-matrix-green rounded px-3 py-1 text-xs text-matrix-green whitespace-nowrap pointer-events-none opacity-0 hover:opacity-100 transition-opacity">
-            💀 AI Assistant
+          {/* Tooltip on hover */}
+          <div className="absolute top-1/2 right-full mr-2 transform -translate-y-1/2 bg-terminal-card border border-matrix-green rounded px-3 py-1.5 text-xs text-matrix-green whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none shadow-lg">
+            AI Assistant
+            <div className="absolute top-1/2 left-full transform -translate-y-1/2 border-4 border-transparent border-l-matrix-green"></div>
           </div>
         </div>
       )}
@@ -208,7 +278,7 @@ function AIMascot() {
             onMouseDown={handleMouseDown}
           >
             <div className="flex items-center gap-3">
-              <Skull className="w-5 h-5 text-matrix-green animate-pulse-slow" />
+              <div className="text-matrix-green font-bold text-lg">⟨⟩</div>
               <span className="text-matrix-green font-semibold">DedSec AI Terminal</span>
             </div>
             <div className="flex items-center gap-2">
@@ -220,7 +290,13 @@ function AIMascot() {
                 {isExpanded ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
               </button>
               <button
-                onClick={() => setIsOpen(false)}
+                onClick={() => {
+                  setIsOpen(false);
+                  // Smoothly return to default position
+                  setTimeout(() => {
+                    setPosition(getDefaultPosition());
+                  }, 150);
+                }}
                 className="text-terminal-muted hover:text-red-500 transition-colors"
                 title="Close"
               >

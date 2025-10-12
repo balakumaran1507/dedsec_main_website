@@ -3,9 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { auth, logoutUser } from '../utils/firebase';
 import Chat from '../components/Chat';
 import AIMascot from '../components/AIMascot';
+import CommandPalette from '../components/CommandPalette';
 
 function Dashboard() {
   const [user, setUser] = useState(null);
+  const [shouldOpenAI, setShouldOpenAI] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -39,8 +41,14 @@ function Dashboard() {
 
   return (
     <div className="min-h-screen bg-terminal-bg text-terminal-text">
+      {/* Command Palette */}
+      <CommandPalette 
+        onLogout={handleLogout}
+        onOpenAI={() => setShouldOpenAI(true)}
+      />
+      
       {/* AI Assistant Mascot */}
-      <AIMascot />
+      <AIMascot shouldOpen={shouldOpenAI} onOpened={() => setShouldOpenAI(false)} />
       
       {/* Top Bar */}
       <div className="bg-terminal-card border-b border-terminal-border px-6 py-4 flex items-center justify-between">
@@ -49,6 +57,25 @@ function Dashboard() {
           <h1 className="text-xl font-bold text-matrix-green">DedSec</h1>
         </div>
         <div className="flex items-center gap-4">
+          <div className="hidden md:flex items-center gap-2 text-terminal-muted text-sm">
+            <span>Press</span>
+            <kbd className="px-2 py-1 text-xs bg-terminal-bg border border-terminal-border rounded">
+              ~
+            </kbd>
+            <span>for commands</span>
+          </div>
+          <button
+            onClick={() => navigate('/ctf')}
+            className="text-terminal-muted hover:text-matrix-green transition-colors text-sm"
+          >
+            🎯 CTF Tracker
+          </button>
+          <button
+            onClick={() => navigate('/profile')}
+            className="text-terminal-muted hover:text-matrix-green transition-colors text-sm"
+          >
+            👤 Profile
+          </button>
           <span className="text-terminal-muted text-sm">{user.email}</span>
           <button
             onClick={handleLogout}
