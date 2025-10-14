@@ -65,6 +65,12 @@ function Dashboard() {
             <span>for commands</span>
           </div>
           <button
+            onClick={() => navigate('/writeups')}
+            className="text-terminal-muted hover:text-matrix-green transition-colors text-sm"
+          >
+            📝 Writeups
+          </button>
+          <button
             onClick={() => navigate('/ctf')}
             className="text-terminal-muted hover:text-matrix-green transition-colors text-sm"
           >
