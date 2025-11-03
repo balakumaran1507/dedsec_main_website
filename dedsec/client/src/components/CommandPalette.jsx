@@ -7,7 +7,10 @@ import {
   Award, 
   LogOut, 
   Terminal,
-  Search
+  Search,
+  Megaphone,
+  FileText,
+  Users
 } from 'lucide-react';
 
 // Available commands
@@ -21,12 +24,20 @@ const COMMANDS = [
     keywords: ['home', 'main', 'dashboard']
   },
   {
-    id: 'ctf',
-    label: 'CTF Tracker',
-    icon: Award,
+    id: 'writeups',
+    label: 'Writeups Library',
+    icon: FileText,
     action: 'navigate',
-    path: '/ctf',
-    keywords: ['ctf', 'challenges', 'flags', 'tracker']
+    path: '/writeups',
+    keywords: ['writeups', 'solutions', 'library', 'uploads']
+  },
+  {
+    id: 'announcements',
+    label: 'Announcements',
+    icon: Megaphone,
+    action: 'navigate',
+    path: '/announcements',
+    keywords: ['announcements', 'updates', 'ctf', 'events']
   },
   {
     id: 'profile',
@@ -34,23 +45,15 @@ const COMMANDS = [
     icon: User,
     action: 'navigate',
     path: '/profile',
-    keywords: ['profile', 'user', 'stats', 'me']
+    keywords: ['profile', 'user', 'stats', 'me', 'badges']
   },
   {
-    id: 'chat',
-    label: 'Open Chat',
-    icon: MessageSquare,
-    action: 'scroll',
-    target: 'chat',
-    keywords: ['chat', 'message', 'talk', 'channel']
-  },
-  {
-    id: 'ai',
-    label: 'Open AI Assistant',
-    icon: Terminal,
-    action: 'custom',
-    handler: 'openAI',
-    keywords: ['ai', 'assistant', 'help', 'skull']
+    id: 'admin',
+    label: 'Admin Panel',
+    icon: Award,
+    action: 'navigate',
+    path: '/admin',
+    keywords: ['admin', 'panel', 'manage', 'members']
   },
   {
     id: 'logout',
@@ -61,7 +64,7 @@ const COMMANDS = [
   }
 ];
 
-function CommandPalette({ onLogout, onOpenAI }) {
+function CommandPalette({ onLogout }) {
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -129,11 +132,6 @@ function CommandPalette({ onLogout, onOpenAI }) {
         break;
       case 'logout':
         if (onLogout) onLogout();
-        break;
-      case 'custom':
-        if (command.handler === 'openAI' && onOpenAI) {
-          onOpenAI();
-        }
         break;
       default:
         break;

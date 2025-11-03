@@ -2,12 +2,12 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { auth, logoutUser } from '../utils/firebase';
 import Chat from '../components/Chat';
-import AIMascot from '../components/AIMascot';
 import CommandPalette from '../components/CommandPalette';
+import DashboardHome from '../components/DashboardHome';
 
 function Dashboard() {
   const [user, setUser] = useState(null);
-  const [shouldOpenAI, setShouldOpenAI] = useState(false);
+  const [activeView, setActiveView] = useState('home'); // 'home' or 'chat'
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -44,11 +44,7 @@ function Dashboard() {
       {/* Command Palette */}
       <CommandPalette 
         onLogout={handleLogout}
-        onOpenAI={() => setShouldOpenAI(true)}
       />
-      
-      {/* AI Assistant Mascot */}
-      <AIMascot shouldOpen={shouldOpenAI} onOpened={() => setShouldOpenAI(false)} />
       
       {/* Top Bar */}
       <div className="bg-terminal-card border-b border-terminal-border px-6 py-4 flex items-center justify-between">
@@ -65,22 +61,50 @@ function Dashboard() {
             <span>for commands</span>
           </div>
           <button
+            onClick={() => setActiveView('home')}
+            className={`text-sm transition-colors ${
+              activeView === 'home' ? 'text-matrix-green' : 'text-terminal-muted hover:text-matrix-green'
+            }`}
+          >
+            🏠 Home
+          </button>
+          <button
+            onClick={() => setActiveView('chat')}
+            className={`text-sm transition-colors ${
+              activeView === 'chat' ? 'text-matrix-green' : 'text-terminal-muted hover:text-matrix-green'
+            }`}
+          >
+            💬 Chat
+          </button>
+          <button
+            onClick={() => navigate('/announcements')}
+            className="text-terminal-muted hover:text-matrix-green transition-colors text-sm"
+          >
+            📢 Announcements
+          </button>
+          <button
             onClick={() => navigate('/writeups')}
             className="text-terminal-muted hover:text-matrix-green transition-colors text-sm"
           >
             📝 Writeups
           </button>
           <button
-            onClick={() => navigate('/ctf')}
+            onClick={() => navigate('/stats')}
             className="text-terminal-muted hover:text-matrix-green transition-colors text-sm"
           >
-            🎯 CTF Tracker
+            📊 Stats
           </button>
           <button
             onClick={() => navigate('/profile')}
             className="text-terminal-muted hover:text-matrix-green transition-colors text-sm"
           >
             👤 Profile
+          </button>
+          <button
+            onClick={() => navigate('/admin')}
+            className="text-terminal-muted hover:text-yellow-400 transition-colors text-sm"
+          >
+            👑 Admin
           </button>
           <span className="text-terminal-muted text-sm">{user.email}</span>
           <button
@@ -93,7 +117,13 @@ function Dashboard() {
       </div>
 
       {/* Main Content */}
-      <Chat username={user.email.split('@')[0]} />
+      <div className="container mx-auto px-6 py-8">
+        {activeView === 'home' ? (
+          <DashboardHome user={user} />
+        ) : (
+          <Chat username={user.email.split('@')[0]} />
+        )}
+      </div>
     </div>
   );
 }

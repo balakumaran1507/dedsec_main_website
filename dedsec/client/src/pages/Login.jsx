@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { loginUser, registerUser } from '../utils/firebase';
+import { createUserDocument } from '../utils/firestore';
 import { useNavigate } from 'react-router-dom';
 
 function Login() {
@@ -9,6 +10,10 @@ function Login() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+
+  const handleBackToLanding = () => {
+    navigate('/');
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -29,23 +34,51 @@ function Login() {
     }
 
     // Try to login or register
-    const result = isLogin 
-      ? await loginUser(email, password)
-      : await registerUser(email, password);
-
-    setLoading(false);
-
-    if (result.success) {
-      // Redirect to dashboard on success
-      navigate('/dashboard');
+    if (isLogin) {
+      // Login
+      const result = await loginUser(email, password);
+      setLoading(false);
+      
+      if (result.success) {
+        navigate('/dashboard');
+      } else {
+        setError(result.error);
+      }
     } else {
-      // Show error message
-      setError(result.error);
+      // Register
+      const result = await registerUser(email, password);
+      
+      if (result.success) {
+        // Create Firestore user document
+        const docResult = await createUserDocument(result.user.uid, {
+          email: result.user.email,
+          displayName: result.user.email.split('@')[0]
+        });
+        
+        setLoading(false);
+        
+        if (docResult.success) {
+          navigate('/dashboard');
+        } else {
+          setError('Account created but profile setup failed. Please try logging in.');
+        }
+      } else {
+        setLoading(false);
+        setError(result.error);
+      }
     }
   };
 
   return (
     <div className="min-h-screen bg-terminal-bg flex items-center justify-center p-4">
+      {/* Back to Landing Button */}
+      <button
+        onClick={handleBackToLanding}
+        className="absolute top-6 left-6 text-terminal-muted hover:text-matrix-green transition-colors flex items-center gap-2"
+      >
+        ← Back to Landing
+      </button>
+
       {/* Animated background grid */}
       <div className="absolute inset-0 bg-[linear-gradient(rgba(0,255,65,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(0,255,65,0.03)_1px,transparent_1px)] bg-[size:50px_50px] [mask-image:radial-gradient(ellipse_80%_50%_at_50%_50%,black,transparent)]"></div>
       
@@ -155,7 +188,7 @@ function Login() {
 
         {/* Version info */}
         <p className="text-terminal-muted text-xs text-center mt-6">
-          DedSec v1.0.0 | Phase 1: Authentication
+          DedSec v2.0.0 | Phase 2: Firestore Integration
         </p>
       </div>
     </div>

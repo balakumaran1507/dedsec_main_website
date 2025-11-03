@@ -7,6 +7,8 @@ import {
   signOut,
   onAuthStateChanged 
 } from 'firebase/auth';
+import { getFirestore } from 'firebase/firestore';
+import { getStorage } from 'firebase/storage';
 
 // Firebase config from environment variables
 const firebaseConfig = {
@@ -21,6 +23,8 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
+const db = getFirestore(app);
+const storage = getStorage(app);
 
 // Authentication Functions
 
@@ -59,4 +63,4 @@ export const onAuthChange = (callback) => {
   return onAuthStateChanged(auth, callback);
 };
 
-export { auth };
+export { auth, db, storage, app };

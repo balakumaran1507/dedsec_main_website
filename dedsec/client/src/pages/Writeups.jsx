@@ -2,28 +2,43 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { auth } from '../utils/firebase';
 import { 
+  getWriteups, 
+  createWriteup, 
+  toggleUpvote, 
+  updateWriteupNotes 
+} from '../utils/firestore';
+import { 
+  uploadWriteupFile, 
+  validateFile, 
+  formatFileSize 
+} from '../utils/storage';
+import toast, { Toaster } from 'react-hot-toast';
+import { testFirebaseConnection } from '../utils/firebaseTest';
+import { 
   BookOpen, 
   Upload, 
   Search,
-  Filter,
   Award,
   Eye,
   FileText,
-  Plus,
   X,
-  Image as ImageIcon
+  ThumbsUp,
+  MessageCircle,
+  Edit2,
+  Save,
+  Loader
 } from 'lucide-react';
 
 // Categories
 const CATEGORIES = ['Web', 'Crypto', 'Pwn', 'Reversing', 'Forensics', 'OSINT', 'Misc'];
 
-// Rank options
+// Rank options (now affects upvote visibility, not XP)
 const RANK_OPTIONS = [
-  { value: '1', label: '1st Place', xpBonus: 200 },
-  { value: 'top10', label: 'Top 10', xpBonus: 100 },
-  { value: 'top50', label: 'Top 50', xpBonus: 50 },
-  { value: 'top100', label: 'Top 100', xpBonus: 25 },
-  { value: 'participated', label: 'Participated', xpBonus: 0 }
+  { value: '1', label: '1st Place' },
+  { value: 'top10', label: 'Top 10' },
+  { value: 'top50', label: 'Top 50' },
+  { value: 'top100', label: 'Top 100' },
+  { value: 'participated', label: 'Participated' }
 ];
 
 function Writeups() {
@@ -33,53 +48,9 @@ function Writeups() {
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [viewWriteup, setViewWriteup] = useState(null);
-
-  // Demo writeups (later store in Firebase)
-  const [writeups, setWriteups] = useState([
-    {
-      id: 1,
-      title: 'SQL Injection - HackTheBox Lame',
-      author: 'you',
-      authorEmail: user?.email || 'hacker@dedsec.net',
-      ctfName: 'HackTheBox',
-      challengeName: 'Lame',
-      category: 'Web',
-      rank: 'top10',
-      date: '2025-10-10',
-      views: 23,
-      xpEarned: 150, // 50 base + 100 bonus
-      type: 'markdown',
-      content: `# SQL Injection Writeup
-
-## Challenge Description
-Exploit a vulnerable login form using SQL injection.
-
-## Solution
-\`\`\`sql
-' OR '1'='1' --
-\`\`\`
-
-## Flag
-DedSec{sql_1nj3ct10n_ez}`,
-      featured: true
-    },
-    {
-      id: 2,
-      title: 'Buffer Overflow Exploit',
-      author: 'teammate1',
-      authorEmail: 'teammate1@dedsec.net',
-      ctfName: 'PicoCTF 2024',
-      challengeName: 'Buffer Buster',
-      category: 'Pwn',
-      rank: '1',
-      date: '2025-10-08',
-      views: 45,
-      xpEarned: 250,
-      type: 'file',
-      fileUrl: '/uploads/buffer_overflow.pdf',
-      featured: false
-    }
-  ]);
+  const [writeups, setWriteups] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [uploadProgress, setUploadProgress] = useState(0);
 
   const [newWriteup, setNewWriteup] = useState({
     title: '',
@@ -90,19 +61,50 @@ DedSec{sql_1nj3ct10n_ez}`,
     type: 'markdown',
     content: '',
     file: null,
-    images: []
+    authorNotes: ''
   });
 
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged((currentUser) => {
+    const unsubscribe = auth.onAuthStateChanged(async (currentUser) => {
       if (currentUser) {
         setUser(currentUser);
+        
+        // Run Firebase test on first load (only in dev)
+        if (import.meta.env.DEV) {
+          console.log('🧪 Running Firebase connection test...');
+          await testFirebaseConnection();
+        }
+        
+        loadWriteups();
       } else {
         navigate('/');
       }
     });
     return () => unsubscribe();
   }, [navigate]);
+
+  // Load writeups from Firestore
+  const loadWriteups = async () => {
+    console.log('🔍 Loading writeups...');
+    setLoading(true);
+    try {
+      const result = await getWriteups();
+      console.log('📦 Writeups result:', result);
+      if (result.success) {
+        console.log('✅ Loaded writeups:', result.data?.length || 0);
+        setWriteups(result.data || []);
+      } else {
+        console.error('❌ Failed to load writeups:', result.error);
+        setWriteups([]);
+        toast.error('Failed to load writeups: ' + result.error);
+      }
+    } catch (error) {
+      console.error('💥 Error loading writeups:', error);
+      setWriteups([]);
+      toast.error('Error: ' + error.message);
+    }
+    setLoading(false);
+  };
 
   // Filter writeups
   const filteredWriteups = writeups.filter(writeup => {
@@ -112,70 +114,133 @@ DedSec{sql_1nj3ct10n_ez}`,
     return matchesSearch && matchesCategory;
   });
 
-  // Calculate XP
-  const calculateXP = (rank) => {
-    const baseXP = 50;
-    const rankBonus = RANK_OPTIONS.find(r => r.value === rank)?.xpBonus || 0;
-    return baseXP + rankBonus;
-  };
-
   // Upload writeup
-  const uploadWriteup = () => {
+  const uploadWriteup = async () => {
+    console.log('🚀 Starting writeup upload...');
+    
     if (!newWriteup.title || !newWriteup.ctfName || !newWriteup.challengeName) {
-      alert('Please fill in all required fields!');
+      toast.error('Please fill in all required fields!');
       return;
     }
 
     if (newWriteup.type === 'markdown' && !newWriteup.content) {
-      alert('Please write your writeup content!');
+      toast.error('Please write your writeup content!');
       return;
     }
 
     if (newWriteup.type === 'file' && !newWriteup.file) {
-      alert('Please upload a file!');
+      toast.error('Please upload a file!');
       return;
     }
 
-    const xpEarned = calculateXP(newWriteup.rank);
-    const rankLabel = RANK_OPTIONS.find(r => r.value === newWriteup.rank)?.label;
+    const loadingToast = toast.loading('Uploading writeup...');
 
-    const writeup = {
-      id: Date.now(),
-      ...newWriteup,
-      author: user.email.split('@')[0],
-      authorEmail: user.email,
-      date: new Date().toISOString().split('T')[0],
-      views: 0,
-      xpEarned,
-      featured: false,
-      fileUrl: newWriteup.file ? URL.createObjectURL(newWriteup.file) : null
-    };
+    try {
+      let fileUrl = null;
+      let filePath = null;
 
-    setWriteups(prev => [writeup, ...prev]);
+      // Upload file if type is 'file'
+      if (newWriteup.type === 'file') {
+        console.log('📁 Validating file...');
+        const validation = validateFile(newWriteup.file, 'document');
+        if (!validation.valid) {
+          toast.error(validation.error);
+          toast.dismiss(loadingToast);
+          return;
+        }
+
+        console.log('☁️ Uploading to Firebase Storage...');
+        const uploadResult = await uploadWriteupFile(
+          newWriteup.file, 
+          user.uid,
+          (progress) => {
+            console.log(`📊 Upload progress: ${progress}%`);
+            setUploadProgress(progress);
+          }
+        );
+
+        if (!uploadResult.success) {
+          console.error('❌ Storage upload failed:', uploadResult.error);
+          toast.error(uploadResult.error);
+          toast.dismiss(loadingToast);
+          return;
+        }
+
+        console.log('✅ File uploaded:', uploadResult.url);
+        fileUrl = uploadResult.url;
+        filePath = uploadResult.path;
+      }
+
+      // Create writeup in Firestore
+      const writeupData = {
+        title: newWriteup.title,
+        ctfName: newWriteup.ctfName,
+        challengeName: newWriteup.challengeName,
+        category: newWriteup.category,
+        rank: newWriteup.rank,
+        type: newWriteup.type,
+        content: newWriteup.type === 'markdown' ? newWriteup.content : '',
+        fileUrl: fileUrl,
+        filePath: filePath,
+        authorUid: user.uid,
+        authorEmail: user.email,
+        authorName: user.email.split('@')[0],
+        authorNotes: newWriteup.authorNotes || '',
+        views: 0,
+        featured: false
+      };
+
+      console.log('💾 Creating writeup in Firestore...', writeupData);
+      const result = await createWriteup(writeupData);
+      console.log('📝 Firestore result:', result);
+
+      if (result.success) {
+        toast.success('Writeup uploaded successfully!');
+        setShowUploadModal(false);
+        setNewWriteup({
+          title: '',
+          ctfName: '',
+          challengeName: '',
+          category: 'Web',
+          rank: 'participated',
+          type: 'markdown',
+          content: '',
+          file: null,
+          authorNotes: ''
+        });
+        setUploadProgress(0);
+        console.log('🔄 Reloading writeups...');
+        await loadWriteups(); // Reload writeups
+      } else {
+        console.error('❌ Failed to create writeup:', result.error);
+        toast.error('Failed to save: ' + result.error);
+      }
+    } catch (error) {
+      console.error('💥 Upload error:', error);
+      toast.error('Failed to upload: ' + error.message);
+    }
+
+    toast.dismiss(loadingToast);
+  };
+
+  // Handle upvote toggle
+  const handleUpvote = async (writeupId, e) => {
+    e.stopPropagation(); // Prevent opening writeup modal
     
-    // TODO: Update user XP in Firebase
-    alert(`🎉 Writeup uploaded! +${xpEarned} XP earned!\nBadge: "${newWriteup.ctfName} - ${rankLabel}"`);
-
-    // Reset form
-    setNewWriteup({
-      title: '',
-      ctfName: '',
-      challengeName: '',
-      category: 'Web',
-      rank: 'participated',
-      type: 'markdown',
-      content: '',
-      file: null,
-      images: []
-    });
-    setShowUploadModal(false);
+    const result = await toggleUpvote(writeupId, user.uid);
+    if (result.success) {
+      toast.success(result.upvoted ? 'Upvoted!' : 'Upvote removed');
+      loadWriteups(); // Reload to show updated upvotes
+    } else {
+      toast.error(result.error);
+    }
   };
 
   if (!user) {
     return (
       <div className="min-h-screen bg-terminal-bg flex items-center justify-center">
         <div className="text-matrix-green text-xl">
-          <span className="animate-spin inline-block">⚙️</span> Loading...
+          <Loader className="animate-spin inline-block w-8 h-8" />
         </div>
       </div>
     );
@@ -183,6 +248,8 @@ DedSec{sql_1nj3ct10n_ez}`,
 
   return (
     <div className="min-h-screen bg-terminal-bg text-terminal-text p-6">
+      <Toaster position="top-right" />
+      
       {/* Back Button */}
       <button
         onClick={() => navigate('/dashboard')}
@@ -226,17 +293,17 @@ DedSec{sql_1nj3ct10n_ez}`,
               <Award className="w-5 h-5 text-matrix-green" />
             </div>
             <div className="text-3xl font-bold text-matrix-green">
-              {writeups.filter(w => w.authorEmail === user.email).length}
+              {writeups.filter(w => w.authorUid === user.uid).length}
             </div>
           </div>
 
           <div className="bg-terminal-card border border-terminal-border rounded-lg p-6">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-terminal-muted text-sm">Total Views</span>
-              <Eye className="w-5 h-5 text-matrix-green" />
+              <span className="text-terminal-muted text-sm">Total Upvotes</span>
+              <ThumbsUp className="w-5 h-5 text-matrix-green" />
             </div>
             <div className="text-3xl font-bold text-matrix-green">
-              {writeups.reduce((sum, w) => sum + w.views, 0)}
+              {writeups.reduce((sum, w) => sum + (w.upvotes || 0), 0)}
             </div>
           </div>
         </div>
@@ -268,18 +335,30 @@ DedSec{sql_1nj3ct10n_ez}`,
           </div>
         </div>
 
-        {/* Writeups Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredWriteups.map(writeup => (
-            <WriteupCard
-              key={writeup.id}
-              writeup={writeup}
-              onClick={() => setViewWriteup(writeup)}
-            />
-          ))}
-        </div>
+        {/* Loading State */}
+        {loading && (
+          <div className="text-center py-20">
+            <Loader className="w-12 h-12 text-matrix-green animate-spin mx-auto mb-4" />
+            <p className="text-terminal-muted">Loading writeups...</p>
+          </div>
+        )}
 
-        {filteredWriteups.length === 0 && (
+        {/* Writeups Grid */}
+        {!loading && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredWriteups.map(writeup => (
+              <WriteupCard
+                key={writeup.id}
+                writeup={writeup}
+                currentUserId={user.uid}
+                onClick={() => setViewWriteup(writeup)}
+                onUpvote={handleUpvote}
+              />
+            ))}
+          </div>
+        )}
+
+        {!loading && filteredWriteups.length === 0 && (
           <div className="text-center py-20 text-terminal-muted">
             <BookOpen className="w-16 h-16 mx-auto mb-4 opacity-30" />
             <p>No writeups found</p>
@@ -293,8 +372,11 @@ DedSec{sql_1nj3ct10n_ez}`,
           newWriteup={newWriteup}
           setNewWriteup={setNewWriteup}
           onUpload={uploadWriteup}
-          onClose={() => setShowUploadModal(false)}
-          calculateXP={calculateXP}
+          onClose={() => {
+            setShowUploadModal(false);
+            setUploadProgress(0);
+          }}
+          uploadProgress={uploadProgress}
         />
       )}
 
@@ -302,7 +384,11 @@ DedSec{sql_1nj3ct10n_ez}`,
       {viewWriteup && (
         <ViewWriteupModal
           writeup={viewWriteup}
+          currentUser={user}
+          navigate={navigate}
           onClose={() => setViewWriteup(null)}
+          onUpvote={handleUpvote}
+          onReload={loadWriteups}
         />
       )}
     </div>
@@ -310,54 +396,76 @@ DedSec{sql_1nj3ct10n_ez}`,
 }
 
 // Writeup Card Component
-function WriteupCard({ writeup, onClick }) {
+function WriteupCard({ writeup, currentUserId, onClick, onUpvote }) {
   const rankInfo = RANK_OPTIONS.find(r => r.value === writeup.rank);
+  const hasUpvoted = writeup.upvotedBy?.includes(currentUserId);
+  
+  // Format date
+  const date = writeup.date?.toDate ? writeup.date.toDate() : new Date(writeup.date);
+  const formattedDate = date.toLocaleDateString('en-US', { 
+    month: 'short', 
+    day: 'numeric', 
+    year: 'numeric' 
+  });
 
   return (
     <div
-      onClick={onClick}
-      className="bg-terminal-card border border-terminal-border rounded-lg p-6 hover:border-matrix-green transition-all cursor-pointer"
+      className="bg-terminal-card border border-terminal-border rounded-lg p-6 hover:border-matrix-green transition-all cursor-pointer relative"
     >
-      {writeup.featured && (
-        <div className="mb-3">
-          <span className="text-xs px-2 py-1 bg-matrix-dim text-matrix-green rounded border border-matrix-green">
-            ⭐ Featured
+      <div onClick={onClick}>
+        {writeup.featured && (
+          <div className="mb-3">
+            <span className="text-xs px-2 py-1 bg-matrix-dim text-matrix-green rounded border border-matrix-green">
+              ⭐ Featured
+            </span>
+          </div>
+        )}
+
+        <h3 className="text-lg font-semibold text-terminal-text mb-2">{writeup.title}</h3>
+        
+        <div className="flex items-center gap-2 mb-3 flex-wrap">
+          <span className="text-xs px-2 py-1 rounded bg-terminal-bg text-terminal-muted border border-terminal-border">
+            {writeup.category}
+          </span>
+          <span className="text-xs px-2 py-1 rounded bg-matrix-dim text-matrix-green border border-matrix-green">
+            {rankInfo?.label}
           </span>
         </div>
-      )}
 
-      <h3 className="text-lg font-semibold text-terminal-text mb-2">{writeup.title}</h3>
-      
-      <div className="flex items-center gap-2 mb-3">
-        <span className="text-xs px-2 py-1 rounded bg-terminal-bg text-terminal-muted border border-terminal-border">
-          {writeup.category}
-        </span>
-        <span className="text-xs px-2 py-1 rounded bg-matrix-dim text-matrix-green border border-matrix-green">
-          {rankInfo?.label}
-        </span>
-      </div>
+        <div className="text-sm text-terminal-muted mb-3">
+          <div>{writeup.ctfName} - {writeup.challengeName}</div>
+          <div>by {writeup.authorName}</div>
+        </div>
 
-      <div className="text-sm text-terminal-muted mb-3">
-        <div>{writeup.ctfName} - {writeup.challengeName}</div>
-        <div>by {writeup.author}</div>
-      </div>
-
-      <div className="flex items-center justify-between text-xs text-terminal-muted">
-        <span>{writeup.date}</span>
-        <div className="flex items-center gap-3">
-          <span className="flex items-center gap-1">
-            <Eye size={14} />
-            {writeup.views}
-          </span>
-          <span className="text-matrix-green font-semibold">+{writeup.xpEarned} XP</span>
+        <div className="flex items-center justify-between text-xs text-terminal-muted">
+          <span>{formattedDate}</span>
+          <div className="flex items-center gap-3">
+            <span className="flex items-center gap-1">
+              <Eye size={14} />
+              {writeup.views || 0}
+            </span>
+          </div>
         </div>
       </div>
+
+      {/* Upvote Button */}
+      <button
+        onClick={(e) => onUpvote(writeup.id, e)}
+        className={`absolute top-4 right-4 flex items-center gap-1 px-2 py-1 rounded transition-all ${
+          hasUpvoted 
+            ? 'bg-matrix-green text-terminal-bg' 
+            : 'bg-terminal-bg border border-terminal-border text-terminal-muted hover:border-matrix-green hover:text-matrix-green'
+        }`}
+      >
+        <ThumbsUp size={14} />
+        <span className="text-xs font-semibold">{writeup.upvotes || 0}</span>
+      </button>
     </div>
   );
 }
 
 // Upload Modal Component
-function UploadModal({ newWriteup, setNewWriteup, onUpload, onClose, calculateXP }) {
+function UploadModal({ newWriteup, setNewWriteup, onUpload, onClose, uploadProgress }) {
   return (
     <>
       <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50" onClick={onClose}></div>
@@ -429,7 +537,7 @@ function UploadModal({ newWriteup, setNewWriteup, onUpload, onClose, calculateXP
               >
                 {RANK_OPTIONS.map(rank => (
                   <option key={rank.value} value={rank.value}>
-                    {rank.label} (+{rank.xpBonus} XP bonus)
+                    {rank.label}
                   </option>
                 ))}
               </select>
@@ -491,27 +599,47 @@ function UploadModal({ newWriteup, setNewWriteup, onUpload, onClose, calculateXP
               />
               {newWriteup.file && (
                 <p className="text-sm text-matrix-green mt-2">
-                  ✓ {newWriteup.file.name}
+                  ✓ {newWriteup.file.name} ({formatFileSize(newWriteup.file.size)})
                 </p>
               )}
             </div>
           )}
 
-          {/* XP Preview */}
-          <div className="bg-matrix-dim border border-matrix-green rounded p-4">
-            <div className="text-sm text-matrix-green">
-              💰 You will earn: <span className="font-bold text-lg">+{calculateXP(newWriteup.rank)} XP</span>
-            </div>
-            <div className="text-xs text-terminal-muted mt-1">
-              50 XP base + {RANK_OPTIONS.find(r => r.value === newWriteup.rank)?.xpBonus} XP rank bonus
-            </div>
+          {/* Author Notes */}
+          <div>
+            <label className="block text-terminal-muted text-sm mb-2">
+              Author Notes (optional)
+            </label>
+            <textarea
+              value={newWriteup.authorNotes}
+              onChange={(e) => setNewWriteup({ ...newWriteup, authorNotes: e.target.value })}
+              className="w-full bg-terminal-bg border border-terminal-border rounded px-3 py-2 text-terminal-text text-sm"
+              rows="3"
+              placeholder="Additional notes, updates, or resources..."
+            />
           </div>
+
+          {/* Upload Progress */}
+          {uploadProgress > 0 && uploadProgress < 100 && (
+            <div className="bg-matrix-dim border border-matrix-green rounded p-4">
+              <div className="text-sm text-matrix-green mb-2">
+                Uploading... {uploadProgress}%
+              </div>
+              <div className="w-full bg-terminal-bg rounded-full h-2">
+                <div 
+                  className="bg-matrix-green h-2 rounded-full transition-all duration-300"
+                  style={{ width: `${uploadProgress}%` }}
+                />
+              </div>
+            </div>
+          )}
 
           {/* Actions */}
           <div className="flex gap-3 pt-4">
             <button
               onClick={onUpload}
-              className="flex-1 bg-matrix-green text-terminal-bg py-3 rounded font-semibold hover:bg-matrix-dark transition-colors"
+              disabled={uploadProgress > 0 && uploadProgress < 100}
+              className="flex-1 bg-matrix-green text-terminal-bg py-3 rounded font-semibold hover:bg-matrix-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Upload Writeup
             </button>
@@ -529,7 +657,45 @@ function UploadModal({ newWriteup, setNewWriteup, onUpload, onClose, calculateXP
 }
 
 // View Writeup Modal Component
-function ViewWriteupModal({ writeup, onClose }) {
+function ViewWriteupModal({ writeup, currentUser, navigate, onClose, onUpvote, onReload }) {
+  const [isEditingNotes, setIsEditingNotes] = useState(false);
+  const [editedNotes, setEditedNotes] = useState(writeup.authorNotes || '');
+  const [isSaving, setIsSaving] = useState(false);
+  
+  const isAuthor = currentUser.uid === writeup.authorUid;
+  const hasUpvoted = writeup.upvotedBy?.includes(currentUser.uid);
+
+  // Format date
+  const date = writeup.date?.toDate ? writeup.date.toDate() : new Date(writeup.date);
+  const formattedDate = date.toLocaleDateString('en-US', { 
+    month: 'long', 
+    day: 'numeric', 
+    year: 'numeric' 
+  });
+
+  // Save author notes
+  const saveNotes = async () => {
+    setIsSaving(true);
+    const result = await updateWriteupNotes(writeup.id, currentUser.uid, editedNotes);
+    if (result.success) {
+      toast.success('Notes updated!');
+      setIsEditingNotes(false);
+      writeup.authorNotes = editedNotes; // Update local state
+      onReload(); // Reload writeups
+    } else {
+      toast.error(result.error);
+    }
+    setIsSaving(false);
+  };
+
+  // Discuss in Chat - opens chat with writeup tag
+  const discussInChat = () => {
+    // Store writeup reference in sessionStorage for chat to pick up
+    sessionStorage.setItem('chatMessage', `Check out this writeup: "${writeup.title}" by ${writeup.authorName} 📝`);
+    navigate('/dashboard'); // Navigate back to dashboard (chat)
+    onClose();
+  };
+
   return (
     <>
       <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50" onClick={onClose}></div>
@@ -538,13 +704,13 @@ function ViewWriteupModal({ writeup, onClose }) {
           <div className="flex-1">
             <h2 className="text-3xl font-bold text-matrix-green mb-2">{writeup.title}</h2>
             <div className="flex items-center gap-3 text-sm text-terminal-muted">
-              <span>by {writeup.author}</span>
+              <span>by {writeup.authorName}</span>
               <span>•</span>
-              <span>{writeup.date}</span>
+              <span>{formattedDate}</span>
               <span>•</span>
               <span className="flex items-center gap-1">
                 <Eye size={14} />
-                {writeup.views} views
+                {writeup.views || 0} views
               </span>
             </div>
           </div>
@@ -567,7 +733,7 @@ function ViewWriteupModal({ writeup, onClose }) {
         </div>
 
         {/* Content */}
-        <div className="prose prose-invert max-w-none">
+        <div className="prose prose-invert max-w-none mb-6">
           {writeup.type === 'markdown' ? (
             <div className="bg-terminal-bg border border-terminal-border rounded p-6 text-terminal-text whitespace-pre-wrap font-mono text-sm">
               {writeup.content}
@@ -578,20 +744,92 @@ function ViewWriteupModal({ writeup, onClose }) {
               <p className="text-terminal-muted mb-4">File uploaded: {writeup.title}</p>
               <a
                 href={writeup.fileUrl}
-                download
+                target="_blank"
+                rel="noopener noreferrer"
                 className="inline-block bg-matrix-green text-terminal-bg px-6 py-3 rounded font-semibold hover:bg-matrix-dark transition-colors"
               >
-                Download PDF/DOCX
+                Open PDF/DOCX
               </a>
             </div>
           )}
         </div>
 
-        {/* Footer */}
-        <div className="mt-6 pt-6 border-t border-terminal-border flex items-center justify-between">
-          <div className="text-sm text-terminal-muted">
-            This writeup earned <span className="text-matrix-green font-semibold">+{writeup.xpEarned} XP</span>
+        {/* Author Notes */}
+        {(writeup.authorNotes || isAuthor) && (
+          <div className="bg-matrix-dim border border-matrix-green rounded p-4 mb-6">
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-sm font-semibold text-matrix-green">Author Notes</h3>
+              {isAuthor && !isEditingNotes && (
+                <button
+                  onClick={() => setIsEditingNotes(true)}
+                  className="text-xs text-terminal-muted hover:text-matrix-green flex items-center gap-1"
+                >
+                  <Edit2 size={12} />
+                  Edit
+                </button>
+              )}
+            </div>
+            {isEditingNotes ? (
+              <div>
+                <textarea
+                  value={editedNotes}
+                  onChange={(e) => setEditedNotes(e.target.value)}
+                  className="w-full bg-terminal-bg border border-terminal-border rounded px-3 py-2 text-terminal-text text-sm"
+                  rows="3"
+                  placeholder="Add notes, updates, or resources..."
+                />
+                <div className="flex gap-2 mt-2">
+                  <button
+                    onClick={saveNotes}
+                    disabled={isSaving}
+                    className="bg-matrix-green text-terminal-bg px-4 py-1 rounded text-sm font-semibold hover:bg-matrix-dark transition-colors disabled:opacity-50"
+                  >
+                    {isSaving ? <Loader className="w-4 h-4 animate-spin" /> : <Save size={14} />}
+                    {isSaving ? ' Saving...' : ' Save'}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setIsEditingNotes(false);
+                      setEditedNotes(writeup.authorNotes || '');
+                    }}
+                    className="text-terminal-muted text-sm hover:text-terminal-text"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <p className="text-sm text-terminal-text">
+                {writeup.authorNotes || <span className="text-terminal-muted italic">No notes yet</span>}
+              </p>
+            )}
           </div>
+        )}
+
+        {/* Footer Actions */}
+        <div className="pt-6 border-t border-terminal-border flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={(e) => onUpvote(writeup.id, e)}
+              className={`flex items-center gap-2 px-4 py-2 rounded transition-all ${
+                hasUpvoted 
+                  ? 'bg-matrix-green text-terminal-bg' 
+                  : 'bg-terminal-bg border border-terminal-border text-terminal-muted hover:border-matrix-green hover:text-matrix-green'
+              }`}
+            >
+              <ThumbsUp size={16} />
+              <span className="font-semibold">{writeup.upvotes || 0}</span>
+            </button>
+            
+            <button
+              onClick={discussInChat}
+              className="flex items-center gap-2 px-4 py-2 rounded bg-terminal-bg border border-terminal-border text-terminal-muted hover:border-matrix-green hover:text-matrix-green transition-all"
+            >
+              <MessageCircle size={16} />
+              Discuss in Chat
+            </button>
+          </div>
+          
           <button
             onClick={onClose}
             className="bg-terminal-bg border border-terminal-border text-terminal-muted px-6 py-2 rounded hover:text-terminal-text transition-colors"
