@@ -117,9 +117,9 @@ function Chat({ username }) {
   };
 
   return (
-    <div className="flex h-[calc(100vh-73px)]">
+    <div className="flex h-screen">
       {/* Sidebar - Channels & Users */}
-      <div className="w-64 bg-terminal-card border-r border-terminal-border flex flex-col">
+      <div className="w-64 bg-terminal-card border-r border-terminal-border flex flex-col h-full">
         {/* Channels */}
         <div className="p-4 border-b border-terminal-border">
           <h3 className="text-terminal-muted text-xs uppercase font-semibold mb-3 flex items-center gap-2">
@@ -175,7 +175,7 @@ function Chat({ username }) {
       </div>
 
       {/* Main Chat Area */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col h-full overflow-hidden">
         {/* Channel Header */}
         <div className="bg-terminal-card border-b border-terminal-border px-6 py-4">
           <h2 className="text-lg font-semibold text-matrix-green">

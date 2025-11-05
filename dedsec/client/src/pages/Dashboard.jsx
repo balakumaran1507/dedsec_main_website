@@ -40,7 +40,7 @@ function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-terminal-bg text-terminal-text">
+    <div className="h-screen bg-terminal-bg text-terminal-text overflow-hidden">
       {/* Command Palette */}
       <CommandPalette 
         onLogout={handleLogout}

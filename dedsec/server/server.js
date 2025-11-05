@@ -4,7 +4,7 @@ import { Server } from 'socket.io';
 import cors from 'cors';
 import axios from 'axios';
 import cron from 'node-cron';
-import nodemailer from 'nodemailer';
+import { createTransport } from 'nodemailer';
 
 const app = express();
 const httpServer = createServer(app);
@@ -179,7 +179,7 @@ const DISCORD_WEBHOOK_URL = process.env.DISCORD_WEBHOOK_URL;
 // EMAIL CONFIGURATION (Gmail SMTP)
 // ============================================
 
-const transporter = nodemailer.createTransporter({
+const transporter = createTransport({
   service: 'gmail',
   auth: {
     user: process.env.GMAIL_USER,
