@@ -10,19 +10,27 @@ const app = express();
 const httpServer = createServer(app);
 
 // Setup Socket.io with CORS
+const allowedOrigins = process.env.CLIENT_URL
+  ? [process.env.CLIENT_URL, "http://localhost:5173", "http://localhost:5174"]
+  : ["http://localhost:5173", "http://localhost:5174"];
+
 const io = new Server(httpServer, {
   cors: {
-    origin: "http://localhost:5173", // Vite dev server
-    methods: ["GET", "POST"]
+    origin: allowedOrigins,
+    methods: ["GET", "POST"],
+    credentials: true
   }
 });
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: allowedOrigins,
+  credentials: true
+}));
 app.use(express.json());
 
-// Store active users and messages in memory (temporary - we'll add database later)
-const activeUsers = new Map(); // userId -> { username, socketId, channel }
+// Store active users and messages in memory
+const activeUsers = new Map();
 const messages = {
   'general': [],
   'ops': [],

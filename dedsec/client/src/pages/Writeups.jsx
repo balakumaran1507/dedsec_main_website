@@ -242,7 +242,7 @@ function Writeups() {
       </div>
 
       {showUploadModal && <UploadModal newWriteup={newWriteup} setNewWriteup={setNewWriteup} onUpload={uploadWriteup} onClose={() => setShowUploadModal(false)} />}
-      {viewWriteup && <ViewWriteupModal writeup={viewWriteup} currentUser={user} navigate={navigate} onClose={() => setViewWriteup(null)} onUpvote={handleUpvote} onReload={loadWriteups} />}
+      {viewWriteup && <ViewWriteupModal writeup={viewWriteup} currentUser={user} onClose={() => setViewWriteup(null)} onUpvote={handleUpvote} onReload={loadWriteups} />}
     </div>
   );
 }
@@ -340,7 +340,7 @@ function UploadModal({ newWriteup, setNewWriteup, onUpload, onClose }) {
   );
 }
 
-function ViewWriteupModal({ writeup, currentUser, navigate, onClose, onUpvote, onReload }) {
+function ViewWriteupModal({ writeup, currentUser, onClose, onUpvote, onReload }) {
   const [isEditingNotes, setIsEditingNotes] = useState(false);
   const [editedNotes, setEditedNotes] = useState(writeup.authorNotes || '');
   const [isSaving, setIsSaving] = useState(false);

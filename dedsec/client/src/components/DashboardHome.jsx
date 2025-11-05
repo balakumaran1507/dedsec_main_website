@@ -222,7 +222,7 @@ function StatCard({ icon: Icon, label, value, color, small = false }) {
   return (
     <div className="bg-terminal-card border border-terminal-border rounded-lg p-4">
       <div className="flex items-center justify-between mb-2">
-        <Icon className={`w-5 h-5 ${color}`} />
+        {Icon && <Icon className={`w-5 h-5 ${color}`} />}
       </div>
       <div className={`${small ? 'text-lg' : 'text-2xl'} font-bold ${color}`}>
         {value}
@@ -239,7 +239,7 @@ function QuickActionCard({ icon: Icon, title, description, onClick, color }) {
       onClick={onClick}
       className={`${color} border-2 rounded-lg p-4 text-left transition-all hover:scale-105`}
     >
-      <Icon className="w-6 h-6 text-matrix-green mb-2" />
+      {Icon && <Icon className="w-6 h-6 text-matrix-green mb-2" />}
       <div className="text-terminal-text font-semibold mb-1">{title}</div>
       <div className="text-terminal-muted text-xs">{description}</div>
     </button>

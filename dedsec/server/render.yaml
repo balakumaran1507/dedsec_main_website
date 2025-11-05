@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: dedsec-server
+    env: node
+    region: oregon
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3001
+      # Add these manually in Render dashboard:
+      # - GMAIL_USER
+      # - GMAIL_APP_PASSWORD
+      # - DISCORD_WEBHOOK_URL (optional)
+      # - CLIENT_URL
+    healthCheckPath: /api/health

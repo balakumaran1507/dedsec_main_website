@@ -1,7 +1,20 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { auth } from '../utils/firebase';
-import { 
+import { auth, db } from '../utils/firebase';
+import {
+  collection,
+  doc,
+  getDoc,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  query,
+  where,
+  onSnapshot,
+  serverTimestamp,
+  Timestamp
+} from 'firebase/firestore';
+import {
   Shield,
   Users,
   UserCheck,
@@ -15,142 +28,250 @@ import {
 function Admin() {
   const [user, setUser] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const navigate = useNavigate();
 
-  // Demo join requests (later from Firebase)
-  const [joinRequests, setJoinRequests] = useState([
-    {
-      id: 1,
-      name: 'Alice Johnson',
-      email: 'alice@example.com',
-      message: 'I\'m a cybersecurity student interested in CTFs and want to learn from your team!',
-      date: '2025-10-14',
-      status: 'pending'
-    },
-    {
-      id: 2,
-      name: 'Bob Smith',
-      email: 'bob@example.com',
-      message: 'Experienced pentester, competed in multiple CTFs. Would love to join!',
-      date: '2025-10-13',
-      status: 'pending'
-    }
-  ]);
+  // Real-time data from Firestore
+  const [joinRequests, setJoinRequests] = useState([]);
+  const [members, setMembers] = useState([]);
 
-  // Demo members (later from Firebase)
-  const [members, setMembers] = useState([
-    {
-      uid: '1',
-      email: 'hacker@dedsec.net',
-      displayName: 'you',
-      role: 'owner',
-      level: 3,
-      xp: 350,
-      joinDate: '2025-10-10'
-    },
-    {
-      uid: '2',
-      email: 'teammate1@dedsec.net',
-      displayName: 'teammate1',
-      role: 'member',
-      level: 5,
-      xp: 1200,
-      joinDate: '2025-09-15'
-    },
-    {
-      uid: '3',
-      email: 'teammate2@dedsec.net',
-      displayName: 'teammate2',
-      role: 'admin',
-      level: 4,
-      xp: 850,
-      joinDate: '2025-09-20'
-    }
-  ]);
-
+  // Check admin status and set up real-time listeners
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged((currentUser) => {
+    const unsubscribe = auth.onAuthStateChanged(async (currentUser) => {
       if (currentUser) {
         setUser(currentUser);
-        // TODO: Check if user is admin from Firebase
-        setIsAdmin(true); // For now, everyone is admin for testing
+
+        try {
+          // Check if user is admin from Firestore
+          const userDocRef = doc(db, 'users', currentUser.uid);
+          const userDoc = await getDoc(userDocRef);
+
+          if (userDoc.exists()) {
+            const userData = userDoc.data();
+            const isAdminUser = userData.role === 'admin' || userData.role === 'owner';
+            setIsAdmin(isAdminUser);
+
+            if (!isAdminUser) {
+              setLoading(false);
+              return; // Don't set up listeners if not admin
+            }
+          } else {
+            // User document doesn't exist, not admin
+            setIsAdmin(false);
+            setLoading(false);
+            return;
+          }
+        } catch (err) {
+          console.error('Error checking admin status:', err);
+          setError('Failed to verify admin permissions');
+          setIsAdmin(false);
+        }
+
+        setLoading(false);
       } else {
         navigate('/');
       }
     });
+
     return () => unsubscribe();
   }, [navigate]);
 
+  // Set up real-time listener for join requests
+  useEffect(() => {
+    if (!user || !isAdmin) return;
+
+    const q = query(
+      collection(db, 'joinRequests'),
+      where('status', '==', 'pending')
+    );
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const requests = [];
+      snapshot.forEach((doc) => {
+        requests.push({
+          id: doc.id,
+          ...doc.data()
+        });
+      });
+      setJoinRequests(requests);
+    }, (err) => {
+      console.error('Error fetching join requests:', err);
+      setError('Failed to load join requests');
+    });
+
+    return () => unsubscribe();
+  }, [user, isAdmin]);
+
+  // Set up real-time listener for members
+  useEffect(() => {
+    if (!user || !isAdmin) return;
+
+    const unsubscribe = onSnapshot(
+      collection(db, 'users'),
+      (snapshot) => {
+        const usersList = [];
+        snapshot.forEach((doc) => {
+          const userData = doc.data();
+          usersList.push({
+            uid: doc.id,
+            ...userData,
+            // Convert Firestore timestamp to readable date
+            joinDate: userData.createdAt?.toDate?.()?.toISOString()?.split('T')[0] || 'N/A'
+          });
+        });
+        setMembers(usersList);
+      },
+      (err) => {
+        console.error('Error fetching members:', err);
+        setError('Failed to load members');
+      }
+    );
+
+    return () => unsubscribe();
+  }, [user, isAdmin]);
+
   // Approve join request
-  const approveRequest = (requestId) => {
+  const approveRequest = async (requestId) => {
     const request = joinRequests.find(r => r.id === requestId);
     if (!request) return;
 
-    // Update request status
-    setJoinRequests(prev =>
-      prev.map(r =>
-        r.id === requestId ? { ...r, status: 'approved' } : r
-      )
-    );
+    try {
+      // Update request status to approved
+      const requestRef = doc(db, 'joinRequests', requestId);
+      await updateDoc(requestRef, {
+        status: 'approved',
+        processedDate: serverTimestamp(),
+        processedBy: user.uid
+      });
 
-    // Add to members (in real app, create Firebase user)
-    const newMember = {
-      uid: Date.now().toString(),
-      email: request.email,
-      displayName: request.name.split(' ')[0].toLowerCase(),
-      role: 'member',
-      level: 1,
-      xp: 0,
-      joinDate: new Date().toISOString().split('T')[0]
-    };
+      // Create new user document
+      const displayName = request.name.split(' ')[0].toLowerCase();
+      await addDoc(collection(db, 'users'), {
+        email: request.email,
+        displayName: displayName,
+        role: 'member',
+        level: 1,
+        xp: 0,
+        joinDate: serverTimestamp(),
+        createdAt: serverTimestamp()
+      });
 
-    setMembers(prev => [...prev, newMember]);
-    alert(`✅ ${request.name} approved! Welcome email sent.`);
+      alert(`✅ ${request.name} approved! They can now sign up with their email.`);
+
+      // Optional: Call email notification endpoint if available
+      // You can uncomment this when server endpoint is ready
+      /*
+      try {
+        await fetch('/api/admin/send-approval-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: request.email, name: request.name })
+        });
+      } catch (emailErr) {
+        console.log('Email notification failed:', emailErr);
+      }
+      */
+    } catch (err) {
+      console.error('Error approving request:', err);
+      alert('❌ Failed to approve request. Please try again.');
+    }
   };
 
   // Reject join request
-  const rejectRequest = (requestId) => {
-    if (confirm('Reject this request?')) {
-      setJoinRequests(prev =>
-        prev.map(r =>
-          r.id === requestId ? { ...r, status: 'rejected' } : r
-        )
-      );
+  const rejectRequest = async (requestId) => {
+    if (!confirm('Reject this request?')) return;
+
+    try {
+      const requestRef = doc(db, 'joinRequests', requestId);
+      await updateDoc(requestRef, {
+        status: 'rejected',
+        processedDate: serverTimestamp(),
+        processedBy: user.uid
+      });
+
       alert('❌ Request rejected.');
+
+      // Optional: Call email notification endpoint if available
+      /*
+      const request = joinRequests.find(r => r.id === requestId);
+      if (request) {
+        try {
+          await fetch('/api/admin/send-rejection-email', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: request.email, name: request.name })
+          });
+        } catch (emailErr) {
+          console.log('Email notification failed:', emailErr);
+        }
+      }
+      */
+    } catch (err) {
+      console.error('Error rejecting request:', err);
+      alert('❌ Failed to reject request. Please try again.');
     }
   };
 
   // Change member role
-  const changeMemberRole = (uid, newRole) => {
-    if (confirm(`Change role to ${newRole}?`)) {
-      setMembers(prev =>
-        prev.map(m =>
-          m.uid === uid ? { ...m, role: newRole } : m
-        )
-      );
+  const changeMemberRole = async (uid, newRole) => {
+    if (!confirm(`Change role to ${newRole}?`)) return;
+
+    try {
+      const userRef = doc(db, 'users', uid);
+      await updateDoc(userRef, {
+        role: newRole
+      });
       alert(`✅ Role updated to ${newRole}`);
+    } catch (err) {
+      console.error('Error updating role:', err);
+      alert('❌ Failed to update role. Please try again.');
     }
   };
 
   // Remove member
-  const removeMember = (uid) => {
+  const removeMember = async (uid) => {
     const member = members.find(m => m.uid === uid);
     if (member?.role === 'owner') {
       alert('❌ Cannot remove owner!');
       return;
     }
 
-    if (confirm('Remove this member?')) {
-      setMembers(prev => prev.filter(m => m.uid !== uid));
+    if (!confirm('Remove this member? This cannot be undone.')) return;
+
+    try {
+      const userRef = doc(db, 'users', uid);
+      await deleteDoc(userRef);
       alert('✅ Member removed.');
+    } catch (err) {
+      console.error('Error removing member:', err);
+      alert('❌ Failed to remove member. Please try again.');
     }
   };
 
-  if (!user) {
+  if (loading || !user) {
     return (
       <div className="min-h-screen bg-terminal-bg flex items-center justify-center">
         <div className="text-matrix-green text-xl">
           <span className="animate-spin inline-block">⚙️</span> Loading...
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-terminal-bg flex items-center justify-center p-6">
+        <div className="text-center">
+          <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
+          <h2 className="text-2xl font-bold text-red-500 mb-2">Error</h2>
+          <p className="text-terminal-muted mb-6">{error}</p>
+          <button
+            onClick={() => navigate('/dashboard')}
+            className="bg-matrix-green text-terminal-bg px-6 py-3 rounded font-semibold hover:bg-matrix-dark transition-colors"
+          >
+            Back to Dashboard
+          </button>
         </div>
       </div>
     );
@@ -277,13 +398,24 @@ function Admin() {
 
 // Join Request Card
 function JoinRequestCard({ request, onApprove, onReject }) {
+  // Format the request date from Firestore timestamp
+  const formatDate = (timestamp) => {
+    if (!timestamp) return 'N/A';
+    if (timestamp.toDate) {
+      return timestamp.toDate().toISOString().split('T')[0];
+    }
+    return timestamp;
+  };
+
   return (
     <div className="bg-terminal-card border border-terminal-border rounded-lg p-6">
       <div className="flex items-start justify-between mb-4">
         <div className="flex-1">
           <h3 className="text-lg font-semibold text-terminal-text mb-1">{request.name}</h3>
           <p className="text-terminal-muted text-sm">{request.email}</p>
-          <p className="text-xs text-terminal-muted mt-1">Requested on {request.date}</p>
+          <p className="text-xs text-terminal-muted mt-1">
+            Requested on {formatDate(request.requestDate)}
+          </p>
         </div>
       </div>
 

@@ -117,13 +117,15 @@ function Dashboard() {
       </div>
 
       {/* Main Content */}
-      <div className="container mx-auto px-6 py-8">
-        {activeView === 'home' ? (
+      {activeView === 'home' ? (
+        <div className="container mx-auto px-6 py-8">
           <DashboardHome user={user} />
-        ) : (
+        </div>
+      ) : (
+        <div className="h-[calc(100vh-73px)]">
           <Chat username={user.email.split('@')[0]} />
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

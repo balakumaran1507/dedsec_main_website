@@ -24,7 +24,8 @@ function Chat({ username }) {
 
   // Connect to Socket.io server
   useEffect(() => {
-    const newSocket = io('http://localhost:3001');
+    const serverUrl = import.meta.env.VITE_SERVER_URL || 'http://localhost:3001';
+    const newSocket = io(serverUrl);
     setSocket(newSocket);
 
     newSocket.on('connect', () => {
@@ -82,7 +83,7 @@ function Chat({ username }) {
     return () => {
       newSocket.close();
     };
-  }, [username]);
+  }, [username, currentChannel]);
 
   // Handle channel switch
   const switchChannel = (channel) => {
