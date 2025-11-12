@@ -3,7 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { auth, db } from '../utils/firebase';
 import { collection, getDocs, query, orderBy, limit } from 'firebase/firestore';
 import toast, { Toaster } from 'react-hot-toast';
-import { 
+import Aurora from '../components/Aurora';
+import FloatingOrbs from '../components/FloatingOrbs';
+import ScrollReveal from '../components/ScrollReveal';
+import {
   TrendingUp,
   Users,
   FileText,

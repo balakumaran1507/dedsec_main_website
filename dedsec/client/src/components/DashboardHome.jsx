@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getUserDocument } from '../utils/firestore';
 import { getTitleByHex } from '../utils/titles';
-import { 
+import {
   Zap,
   Trophy,
   FileText,
@@ -13,6 +13,8 @@ import {
   Calendar,
   Loader
 } from 'lucide-react';
+import ScrollReveal from './ScrollReveal';
+import PulseBorder from './PulseBorder';
 
 function DashboardHome({ user }) {
   const navigate = useNavigate();
@@ -35,7 +37,7 @@ function DashboardHome({ user }) {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <Loader className="w-8 h-8 text-matrix-green animate-spin" />
+        <Loader className="w-8 h-8 text-purple-400 animate-spin" />
       </div>
     );
   }
@@ -53,61 +55,68 @@ function DashboardHome({ user }) {
   return (
     <div className="space-y-6">
       {/* Welcome Section */}
-      <div className="bg-gradient-to-r from-terminal-card to-terminal-bg border border-matrix-green rounded-lg p-8">
-        <h2 className="text-3xl font-bold text-matrix-green mb-2">
-          Welcome back, {user.email.split('@')[0]}!
-        </h2>
-        <p className="text-terminal-muted mb-4">Ready to dominate some CTFs?</p>
-        
-        {/* Current Title Display */}
-        {titleInfo && (
-          <div className="flex items-center gap-3 mt-4">
-            <span className="text-3xl">{titleInfo.icon}</span>
-            <div>
-              <div className={`font-mono text-xl font-bold ${titleInfo.color}`}>
-                {stats.title}
+      <ScrollReveal delay={0.1} direction="up" distance={30}>
+        <PulseBorder color="#8400FF" duration={5} intensity={0.2}>
+          <div className="bg-gradient-to-r from-white/10 to-white/5 backdrop-blur-xl border border-purple-500/30 rounded-2xl p-8 shadow-2xl shadow-purple-500/10">
+            <h2 className="text-3xl font-bold text-purple-400 mb-2">
+              Welcome back, {user.email.split('@')[0]}!
+            </h2>
+            <p className="text-white/60 mb-4">Ready to dominate some CTFs?</p>
+
+            {/* Current Title Display */}
+            {titleInfo && (
+              <div className="flex items-center gap-3 mt-4">
+                <span className="text-3xl">{titleInfo.icon}</span>
+                <div>
+                  <div className={`font-mono text-xl font-bold ${titleInfo.color}`}>
+                    {stats.title}
+                  </div>
+                  <div className="text-white/50 text-sm">
+                    {titleInfo.name}
+                  </div>
+                </div>
               </div>
-              <div className="text-terminal-muted text-sm">
-                {titleInfo.name}
-              </div>
-            </div>
+            )}
           </div>
-        )}
-      </div>
+        </PulseBorder>
+      </ScrollReveal>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <StatCard
-          icon={Zap}
-          label="Contribution Score"
-          value={stats.contributionScore}
-          color="text-matrix-green"
-        />
-        <StatCard
-          icon={Trophy}
-          label="Hex Title"
-          value={stats.titleName}
-          color="text-yellow-400"
-          small
-        />
-        <StatCard
-          icon={FileText}
-          label="Writeups"
-          value={stats.writeups}
-          color="text-blue-400"
-        />
-        <StatCard
-          icon={Award}
-          label="CTF Badges"
-          value={stats.ctfBadges}
-          color="text-purple-400"
-        />
-      </div>
+      <ScrollReveal delay={0.2} direction="up" distance={30}>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <StatCard
+            icon={Zap}
+            label="Contribution Score"
+            value={stats.contributionScore}
+            color="text-purple-400"
+          />
+          <StatCard
+            icon={Trophy}
+            label="Hex Title"
+            value={stats.titleName}
+            color="text-yellow-400"
+            small
+          />
+          <StatCard
+            icon={FileText}
+            label="Writeups"
+            value={stats.writeups}
+            color="text-blue-400"
+          />
+          <StatCard
+            icon={Award}
+            label="CTF Badges"
+            value={stats.ctfBadges}
+            color="text-purple-300"
+          />
+        </div>
+      </ScrollReveal>
 
       {/* Quick Actions */}
-      <div>
-        <h3 className="text-xl font-semibold text-matrix-green mb-4">Quick Actions</h3>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+      <ScrollReveal delay={0.3} direction="up" distance={30}>
+        <div>
+          <h3 className="text-xl font-semibold text-purple-400 mb-4">Quick Actions</h3>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
           <QuickActionCard
             icon={FileText}
             title="Upload Writeup"
@@ -151,67 +160,72 @@ function DashboardHome({ user }) {
             color="bg-green-900/20 border-green-700 hover:border-green-500"
           />
         </div>
-      </div>
+        </div>
+      </ScrollReveal>
 
       {/* Getting Started */}
-      <div>
-        <h3 className="text-xl font-semibold text-matrix-green mb-4">
-          {stats.writeups === 0 ? 'Get Started' : 'Quick Links'}
-        </h3>
-        <div className="bg-terminal-card border border-terminal-border rounded-lg divide-y divide-terminal-border">
+      <ScrollReveal delay={0.4} direction="up" distance={30}>
+        <div>
+          <h3 className="text-xl font-semibold text-purple-400 mb-4">
+            {stats.writeups === 0 ? 'Get Started' : 'Quick Links'}
+          </h3>
+          <div className="bg-white/5 backdrop-blur-xl border border-purple-500/20 rounded-2xl divide-y divide-white/10 shadow-lg shadow-purple-500/5">
           {stats.writeups === 0 && (
-            <div className="p-4 flex items-center justify-between hover:bg-terminal-bg transition-colors cursor-pointer" onClick={() => navigate('/writeups')}>
+            <div className="p-4 flex items-center justify-between hover:bg-white/5 transition-colors cursor-pointer rounded-t-2xl" onClick={() => navigate('/writeups')}>
               <div className="flex items-center gap-3">
-                <FileText className="w-5 h-5 text-matrix-green" />
+                <FileText className="w-5 h-5 text-purple-400" />
                 <div>
-                  <div className="text-terminal-text text-sm">Upload your first writeup!</div>
-                  <div className="text-terminal-muted text-xs">Earn 50+ pts and start building your reputation</div>
+                  <div className="text-white text-sm">Upload your first writeup!</div>
+                  <div className="text-white/50 text-xs">Earn 50+ pts and start building your reputation</div>
                 </div>
               </div>
             </div>
           )}
-          <div className="p-4 flex items-center justify-between hover:bg-terminal-bg transition-colors cursor-pointer" onClick={() => navigate('/announcements')}>
+          <div className="p-4 flex items-center justify-between hover:bg-white/5 transition-colors cursor-pointer" onClick={() => navigate('/announcements')}>
             <div className="flex items-center gap-3">
               <Calendar className="w-5 h-5 text-blue-400" />
               <div>
-                <div className="text-terminal-text text-sm">Check upcoming CTF events</div>
-                <div className="text-terminal-muted text-xs">Mark your interest and coordinate with team</div>
+                <div className="text-white text-sm">Check upcoming CTF events</div>
+                <div className="text-white/50 text-xs">Mark your interest and coordinate with team</div>
               </div>
             </div>
           </div>
-          <div className="p-4 flex items-center justify-between hover:bg-terminal-bg transition-colors cursor-pointer" onClick={() => navigate('/profile')}>
+          <div className="p-4 flex items-center justify-between hover:bg-white/5 transition-colors cursor-pointer rounded-b-2xl" onClick={() => navigate('/profile')}>
             <div className="flex items-center gap-3">
               <Award className="w-5 h-5 text-yellow-400" />
               <div>
-                <div className="text-terminal-text text-sm">View your progress</div>
-                <div className="text-terminal-muted text-xs">Track your hex title advancement</div>
+                <div className="text-white text-sm">View your progress</div>
+                <div className="text-white/50 text-xs">Track your hex title advancement</div>
               </div>
             </div>
           </div>
         </div>
-      </div>
+        </div>
+      </ScrollReveal>
 
       {/* Score Breakdown (if they have any stats) */}
       {stats.contributionScore > 0 && (
-        <div className="bg-terminal-card border border-terminal-border rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-matrix-green mb-4">
-            Your Contribution Breakdown
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="text-center">
-              <div className="text-2xl font-bold text-blue-400">{stats.writeups * 50}</div>
-              <div className="text-xs text-terminal-muted">From Writeups</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-purple-400">{stats.upvotes * 10}</div>
-              <div className="text-xs text-terminal-muted">From Upvotes</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-yellow-400">{stats.ctfBadges * 30}</div>
-              <div className="text-xs text-terminal-muted">From CTF Badges</div>
+        <ScrollReveal delay={0.5} direction="up" distance={30}>
+          <div className="bg-white/5 backdrop-blur-xl border border-purple-500/20 rounded-2xl p-6 shadow-lg shadow-purple-500/5">
+            <h3 className="text-lg font-semibold text-purple-400 mb-4">
+              Your Contribution Breakdown
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-blue-400">{stats.writeups * 50}</div>
+                <div className="text-xs text-white/50">From Writeups</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-purple-400">{stats.upvotes * 10}</div>
+                <div className="text-xs text-white/50">From Upvotes</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-yellow-400">{stats.ctfBadges * 30}</div>
+                <div className="text-xs text-white/50">From CTF Badges</div>
+              </div>
             </div>
           </div>
-        </div>
+        </ScrollReveal>
       )}
     </div>
   );
@@ -220,14 +234,14 @@ function DashboardHome({ user }) {
 // Stat Card Component
 function StatCard({ icon: Icon, label, value, color, small = false }) {
   return (
-    <div className="bg-terminal-card border border-terminal-border rounded-lg p-4">
+    <div className="bg-white/5 backdrop-blur-xl border border-purple-500/20 rounded-xl p-4 shadow-lg shadow-purple-500/5 hover:border-purple-500/40 transition-all hover:scale-105">
       <div className="flex items-center justify-between mb-2">
         {Icon && <Icon className={`w-5 h-5 ${color}`} />}
       </div>
       <div className={`${small ? 'text-lg' : 'text-2xl'} font-bold ${color}`}>
         {value}
       </div>
-      <div className="text-xs text-terminal-muted">{label}</div>
+      <div className="text-xs text-white/50">{label}</div>
     </div>
   );
 }
@@ -237,11 +251,11 @@ function QuickActionCard({ icon: Icon, title, description, onClick, color }) {
   return (
     <button
       onClick={onClick}
-      className={`${color} border-2 rounded-lg p-4 text-left transition-all hover:scale-105`}
+      className={`${color} border-2 rounded-xl p-4 text-left transition-all hover:scale-105 bg-white/5 backdrop-blur-sm`}
     >
-      {Icon && <Icon className="w-6 h-6 text-matrix-green mb-2" />}
-      <div className="text-terminal-text font-semibold mb-1">{title}</div>
-      <div className="text-terminal-muted text-xs">{description}</div>
+      {Icon && <Icon className="w-6 h-6 text-purple-400 mb-2" />}
+      <div className="text-white font-semibold mb-1">{title}</div>
+      <div className="text-white/60 text-xs">{description}</div>
     </button>
   );
 }

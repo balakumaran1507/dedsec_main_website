@@ -1,330 +1,417 @@
 import { useNavigate } from 'react-router-dom';
-import {
-  Trophy,
-  FileText,
-  Users,
-  Shield,
-  Terminal,
-  Zap,
-  Code2,
-  Lock,
-  Cpu
-} from 'lucide-react';
+import { useState, useRef } from 'react';
+import PixelBlast from '../components/PixelBlast';
+import MagicBento from '../components/MagicBento';
+import GradualBlur from '../components/GradualBlur';
+import ScrollReveal from '../components/ScrollReveal';
+import DecryptedText from '../components/DecryptedText';
+import ClickSpark from '../components/ClickSpark';
+import FloatingOrbs from '../components/FloatingOrbs';
+import GradientText from '../components/GradientText';
+import PulseBorder from '../components/PulseBorder';
 
 function Landing() {
   const navigate = useNavigate();
+  const joinFormRef = useRef(null);
 
-  // Stats
-  const stats = [
-    { label: 'Team Members', value: '15+', icon: Users },
-    { label: 'CTF Wins', value: '12', icon: Trophy },
-    { label: 'Writeups', value: '40+', icon: FileText },
-    { label: 'Total XP', value: '8K+', icon: Zap }
-  ];
+  // Scroll to join form
+  const scrollToJoinForm = () => {
+    joinFormRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  };
 
-  // Features
-  const features = [
-    {
-      icon: Terminal,
-      title: 'Live Collaboration',
-      description: 'Real-time chat and team coordination during CTFs'
-    },
-    {
-      icon: FileText,
-      title: 'Knowledge Base',
-      description: 'Comprehensive writeups and learning resources'
-    },
-    {
-      icon: Trophy,
-      title: 'Competitive Play',
-      description: 'Track progress and compete in global CTF events'
-    },
-    {
-      icon: Code2,
-      title: 'Skill Development',
-      description: 'Level up through challenges and team contributions'
+  // Form state
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    github: '',
+    message: ''
+  });
+  const [formStatus, setFormStatus] = useState('idle'); // idle, loading, success, error
+  const [errors, setErrors] = useState({});
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+    // Clear error for this field when user types
+    if (errors[name]) {
+      setErrors(prev => ({ ...prev, [name]: '' }));
     }
-  ];
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+
+    if (!formData.name.trim()) {
+      newErrors.name = 'Name is required';
+    }
+
+    if (!formData.email.trim()) {
+      newErrors.email = 'Email is required';
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      newErrors.email = 'Email is invalid';
+    }
+
+    if (!formData.github.trim()) {
+      newErrors.github = 'GitHub username is required';
+    }
+
+    if (!formData.message.trim()) {
+      newErrors.message = 'Please tell us why you want to join';
+    } else if (formData.message.trim().length < 20) {
+      newErrors.message = 'Please provide at least 20 characters';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!validateForm()) {
+      return;
+    }
+
+    setFormStatus('loading');
+
+    // Simulate API call
+    setTimeout(() => {
+      console.log('Form submitted:', formData);
+      setFormStatus('success');
+
+      // Reset form after 3 seconds
+      setTimeout(() => {
+        setFormData({ name: '', email: '', github: '', message: '' });
+        setFormStatus('idle');
+      }, 3000);
+    }, 1500);
+  };
 
   return (
-    <div className="min-h-screen bg-terminal-bg text-terminal-text">
-      {/* Hero Section */}
-      <div className="relative min-h-screen flex items-center justify-center overflow-hidden">
-        {/* Animated Background Grid */}
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(0,255,65,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(0,255,65,0.05)_1px,transparent_1px)] bg-[size:50px_50px] [mask-image:radial-gradient(ellipse_80%_50%_at_50%_50%,black,transparent)]"></div>
+    <div className="relative w-full min-h-screen overflow-x-hidden bg-black">
+      {/* Hero Section with PixelBlast */}
+      <section style={{ position: 'relative', height: '100vh', overflow: 'hidden', width: '100%' }}>
+        {/* PixelBlast Background - Only in Hero */}
+        <div className="absolute inset-0 w-full h-full">
+          <PixelBlast
+            variant="square"
+            pixelSize={4}
+            color="#B99FE3"
+            patternScale={3}
+            patternDensity={1}
+            pixelSizeJitter={0}
+            enableRipples={true}
+            rippleSpeed={0.4}
+            rippleThickness={0.12}
+            rippleIntensityScale={1.5}
+            liquid={false}
+            speed={0.5}
+            edgeFade={0.05}
+            transparent={true}
+          />
+        </div>
 
-        {/* Multiple Glow Effects */}
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-matrix-green/10 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-matrix-green/5 rounded-full blur-3xl"></div>
+        {/* Glass Navbar */}
+        <nav className="relative z-50 w-full px-8 py-6 pointer-events-none">
+          <div className="max-w-7xl mx-auto">
+            <PulseBorder color="#8400FF" duration={4} intensity={0.2}>
+              <div className="flex items-center justify-between px-6 py-3 rounded-full bg-white/5 backdrop-blur-xl border border-purple-500/20 pointer-events-auto shadow-lg shadow-purple-500/10">
+                {/* Logo */}
+                <span className="text-lg font-bold text-white">DEDSEC X01</span>
 
-        {/* Content */}
-        <div className="relative z-10 text-center px-6 max-w-5xl mx-auto">
-          {/* Logo & Brand */}
-          <div className="mb-12">
-            <div className="flex items-center justify-center gap-4 mb-6">
-              <div className="text-7xl animate-pulse">💀</div>
-              <h1 className="text-8xl md:text-9xl font-bold text-matrix-green tracking-tight font-mono">
-                DedSec
-              </h1>
-            </div>
-            <div className="h-1 w-48 bg-gradient-to-r from-transparent via-matrix-green to-transparent mx-auto mb-6"></div>
+                {/* Sign In Button */}
+                <ClickSpark color="#8400FF" sparkCount={12} sparkSize={3}>
+                  <button
+                    onClick={() => navigate('/login')}
+                    className="px-5 py-2 rounded-full bg-white/10 hover:bg-white/20 text-white text-xs font-semibold backdrop-blur-sm border border-white/20 transition-all hover:scale-105"
+                  >
+                    Sign In
+                  </button>
+                </ClickSpark>
+              </div>
+            </PulseBorder>
           </div>
+        </nav>
+
+        {/* Hero Content */}
+        <div className="relative z-10 flex flex-col items-center justify-center h-[calc(100vh-120px)] px-5 text-center pointer-events-none">
+          {/* Logo with DecryptedText */}
+          <DecryptedText
+            text="DEDSEC"
+            speed={40}
+            maxIterations={15}
+            sequential={true}
+            revealDirection="start"
+            className="text-7xl md:text-8xl font-display font-black text-white mb-6 tracking-tight"
+            as="h1"
+            startOnView={false}
+          />
 
           {/* Tagline */}
-          <p className="text-3xl md:text-4xl text-terminal-text mb-4 font-semibold">
-            Elite CTF Team
-          </p>
-          <p className="text-xl text-terminal-muted mb-16 max-w-3xl mx-auto leading-relaxed">
-            An invite-only cybersecurity collective pushing boundaries through competitive hacking,
-            knowledge sharing, and relentless skill development.
-          </p>
+          <ScrollReveal delay={0.5} direction="up" distance={30}>
+            <p className="text-lg md:text-xl text-white/70 mb-12 font-medium" style={{ fontWeight: 500 }}>
+              Elite Cybersecurity Collective
+            </p>
+          </ScrollReveal>
 
-          {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
-            <button
-              onClick={() => navigate('/login')}
-              className="group relative bg-matrix-green text-terminal-bg px-10 py-5 rounded-lg font-bold text-xl hover:bg-matrix-dark transition-all hover:scale-105 shadow-[0_0_30px_rgba(0,255,0,0.3)] hover:shadow-[0_0_50px_rgba(0,255,0,0.5)] min-w-[240px]"
-            >
-              <span className="relative z-10">MEMBER LOGIN</span>
-              <div className="absolute inset-0 bg-gradient-to-r from-matrix-green/0 via-white/20 to-matrix-green/0 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg"></div>
-            </button>
-            <button
-              onClick={() => {
-                const contactSection = document.getElementById('contact');
-                contactSection?.scrollIntoView({ behavior: 'smooth' });
-              }}
-              className="group relative bg-terminal-bg border-2 border-matrix-green text-matrix-green px-10 py-5 rounded-lg font-bold text-xl hover:bg-matrix-green hover:text-terminal-bg transition-all hover:scale-105 min-w-[240px]"
-            >
-              REQUEST ACCESS
-            </button>
-          </div>
+          {/* Buttons */}
+          <ScrollReveal delay={0.8} direction="up" distance={30}>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center pointer-events-auto">
+              <ClickSpark color="#8400FF" sparkCount={15} sparkSize={4}>
+                <button
+                  onClick={() => navigate('/login')}
+                  className="px-8 py-3 rounded-full bg-white text-black text-sm font-semibold hover:scale-105 transition-all min-w-[160px]"
+                  style={{ fontWeight: 600 }}
+                >
+                  MEMBER LOGIN
+                </button>
+              </ClickSpark>
+              <ClickSpark color="#B99FE3" sparkCount={15} sparkSize={4}>
+                <button
+                  onClick={scrollToJoinForm}
+                  className="px-8 py-3 rounded-full bg-black text-white text-sm font-semibold border-2 border-white hover:scale-105 transition-all min-w-[160px]"
+                  style={{ fontWeight: 600 }}
+                >
+                  REQUEST ACCESS
+                </button>
+              </ClickSpark>
+            </div>
+          </ScrollReveal>
+        </div>
+
+      </section>
+
+      {/* Blur Transition Between Sections */}
+      <div style={{ position: 'relative', height: '8rem', width: '100%', zIndex: 10 }}>
+        <GradualBlur
+          target="parent"
+          position="bottom"
+          height="8rem"
+          strength={1.2}
+          divCount={18}
+          curve="ease-in-out"
+          exponential={false}
+          opacity={1}
+        />
+      </div>
+
+      {/* Magic Bento Section */}
+      <div className="relative w-full min-h-screen bg-black flex items-center justify-center px-4 py-20">
+        <div className="w-full max-w-[95vw] flex flex-col items-center justify-center">
+          {/* Section Header with ScrollReveal */}
+          <ScrollReveal delay={0.2} direction="up" distance={40} blur={8}>
+            <div className="text-center mb-12 px-4">
+              <DecryptedText
+                text="About DEDSEC"
+                speed={30}
+                maxIterations={12}
+                sequential={true}
+                className="text-5xl md:text-6xl font-black text-white mb-4"
+                as="h2"
+              />
+              <p className="text-xl text-white/70">
+                Elite hackers united for digital freedom
+              </p>
+            </div>
+          </ScrollReveal>
+
+          {/* Magic Bento Grid with ScrollReveal */}
+          <ScrollReveal delay={0.4} direction="up" distance={50} blur={10}>
+            <div className="w-full">
+              <MagicBento
+                textAutoHide={true}
+                enableStars={true}
+                enableSpotlight={true}
+                enableBorderGlow={true}
+                enableTilt={true}
+                enableMagnetism={true}
+                clickEffect={true}
+                spotlightRadius={300}
+                particleCount={12}
+                glowColor="132, 0, 255"
+              />
+            </div>
+          </ScrollReveal>
         </div>
       </div>
 
-      {/* Stats Section */}
-      <section className="py-24 bg-terminal-card border-y border-terminal-border">
-        <div className="container mx-auto px-6">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12">
-            {stats.map((stat, idx) => (
-              <div key={idx} className="text-center group hover:scale-105 transition-transform">
-                <stat.icon className="w-16 h-16 text-matrix-green mx-auto mb-4 group-hover:animate-pulse" />
-                <div className="text-5xl md:text-6xl font-bold text-matrix-green mb-3 font-mono">
-                  {stat.value}
-                </div>
-                <div className="text-terminal-muted uppercase text-sm tracking-wider">
-                  {stat.label}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Features Section */}
-      <section className="py-24 bg-terminal-bg">
-        <div className="container mx-auto px-6 max-w-6xl">
-          <div className="text-center mb-16">
-            <h2 className="text-5xl font-bold text-matrix-green mb-4 font-mono">
-              What We Offer
-            </h2>
-            <div className="h-1 w-24 bg-matrix-green mx-auto"></div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {features.map((feature, idx) => (
-              <div
-                key={idx}
-                className="group bg-terminal-card border border-terminal-border rounded-lg p-8 hover:border-matrix-green transition-all hover:shadow-[0_0_20px_rgba(0,255,0,0.2)]"
-              >
-                <feature.icon className="w-12 h-12 text-matrix-green mb-4 group-hover:scale-110 transition-transform" />
-                <h3 className="text-2xl font-bold text-terminal-text mb-3 group-hover:text-matrix-green transition-colors">
-                  {feature.title}
-                </h3>
-                <p className="text-terminal-muted leading-relaxed">
-                  {feature.description}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* About Section */}
-      <section className="py-24 bg-terminal-card border-y border-terminal-border">
-        <div className="container mx-auto px-6 max-w-5xl">
-          <div className="text-center mb-12">
-            <h2 className="text-5xl font-bold text-matrix-green mb-4 font-mono">Who We Are</h2>
-            <div className="h-1 w-24 bg-matrix-green mx-auto"></div>
-          </div>
-
-          <div className="bg-terminal-bg border-2 border-matrix-green/30 rounded-lg p-10 relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-matrix-green/5 rounded-full blur-3xl"></div>
-            <div className="relative z-10">
-              <p className="text-terminal-text text-xl leading-relaxed mb-8">
-                DedSec is an elite cybersecurity team dedicated to mastering Capture The Flag competitions,
-                sharing knowledge through detailed writeups, and building a community of passionate security researchers.
+      {/* Request Access Section */}
+      <div ref={joinFormRef} className="relative w-full min-h-screen bg-black flex items-center justify-center px-4 py-20">
+        <div className="w-full max-w-2xl">
+          {/* Section Header */}
+          <ScrollReveal delay={0.2} direction="up" distance={40} blur={8}>
+            <div className="text-center mb-12">
+              <DecryptedText
+                text="JOIN THE ELITE"
+                speed={35}
+                maxIterations={12}
+                sequential={true}
+                className="text-4xl md:text-5xl font-black text-white mb-4"
+                as="h2"
+              />
+              <p className="text-lg text-white/70 mb-4">
+                Request access to DEDSEC
               </p>
-              <p className="text-terminal-muted text-lg leading-relaxed">
-                We compete in global CTFs, collaborate on complex challenges, and maintain a comprehensive
-                knowledge base. Our invite-only platform serves as the command center for team
-                coordination, learning, and continuous skill development.
-              </p>
+              {/* Decorative gradient line */}
+              <div className="flex justify-center">
+                <div className="w-24 h-1 rounded-full bg-gradient-to-r from-transparent via-purple-500 to-transparent opacity-50" />
+              </div>
             </div>
-          </div>
+          </ScrollReveal>
+
+          {/* Form Container */}
+          <ScrollReveal delay={0.4} direction="up" distance={50} blur={10}>
+            <div className="relative">
+              {/* Floating Orbs Background */}
+              <FloatingOrbs count={6} color="#8400FF" minSize={60} maxSize={140} opacity={0.12} />
+
+              {/* Subtle Corner Accents */}
+              <div className="absolute top-0 left-0 w-32 h-32 bg-purple-500/10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2 pointer-events-none" />
+              <div className="absolute bottom-0 right-0 w-32 h-32 bg-purple-400/10 rounded-full blur-3xl translate-x-1/2 translate-y-1/2 pointer-events-none" />
+
+              <PulseBorder color="#8400FF" duration={4} intensity={0.3}>
+                <div className="relative bg-white/5 backdrop-blur-xl border border-purple-500/20 rounded-2xl p-8 shadow-2xl shadow-purple-500/10" style={{ zIndex: 1 }}>
+                <form onSubmit={handleSubmit} className="space-y-6">
+                  {/* Name Input */}
+                  <div>
+                    <label htmlFor="name" className="block text-sm font-medium text-white/90 mb-2">
+                      Full Name
+                    </label>
+                    <input
+                      type="text"
+                      id="name"
+                      name="name"
+                      value={formData.name}
+                      onChange={handleInputChange}
+                      className={`w-full px-4 py-3 bg-white/5 border ${
+                        errors.name ? 'border-red-500' : 'border-white/10'
+                      } rounded-lg text-white placeholder-white/50 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/50 transition-all`}
+                      placeholder="John Doe"
+                      disabled={formStatus === 'loading' || formStatus === 'success'}
+                    />
+                    {errors.name && (
+                      <p className="mt-1 text-sm text-red-400">{errors.name}</p>
+                    )}
+                  </div>
+
+                  {/* Email Input */}
+                  <div>
+                    <label htmlFor="email" className="block text-sm font-medium text-white/90 mb-2">
+                      Email Address
+                    </label>
+                    <input
+                      type="email"
+                      id="email"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleInputChange}
+                      className={`w-full px-4 py-3 bg-white/5 border ${
+                        errors.email ? 'border-red-500' : 'border-white/10'
+                      } rounded-lg text-white placeholder-white/50 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/50 transition-all`}
+                      placeholder="john@example.com"
+                      disabled={formStatus === 'loading' || formStatus === 'success'}
+                    />
+                    {errors.email && (
+                      <p className="mt-1 text-sm text-red-400">{errors.email}</p>
+                    )}
+                  </div>
+
+                  {/* GitHub Username */}
+                  <div>
+                    <label htmlFor="github" className="block text-sm font-medium text-white/90 mb-2">
+                      GitHub Username
+                    </label>
+                    <input
+                      type="text"
+                      id="github"
+                      name="github"
+                      value={formData.github}
+                      onChange={handleInputChange}
+                      className={`w-full px-4 py-3 bg-white/5 border ${
+                        errors.github ? 'border-red-500' : 'border-white/10'
+                      } rounded-lg text-white placeholder-white/50 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/50 transition-all`}
+                      placeholder="johndoe"
+                      disabled={formStatus === 'loading' || formStatus === 'success'}
+                    />
+                    {errors.github && (
+                      <p className="mt-1 text-sm text-red-400">{errors.github}</p>
+                    )}
+                  </div>
+
+                  {/* Message Textarea */}
+                  <div>
+                    <label htmlFor="message" className="block text-sm font-medium text-white/90 mb-2">
+                      Why do you want to join DEDSEC?
+                    </label>
+                    <textarea
+                      id="message"
+                      name="message"
+                      value={formData.message}
+                      onChange={handleInputChange}
+                      rows={4}
+                      className={`w-full px-4 py-3 bg-white/5 border ${
+                        errors.message ? 'border-red-500' : 'border-white/10'
+                      } rounded-lg text-white placeholder-white/50 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/50 transition-all resize-none`}
+                      placeholder="Tell us about your skills, experience, and why you want to join..."
+                      disabled={formStatus === 'loading' || formStatus === 'success'}
+                    />
+                    {errors.message && (
+                      <p className="mt-1 text-sm text-red-400">{errors.message}</p>
+                    )}
+                    <p className="mt-1 text-xs text-white/50">
+                      {formData.message.length}/500 characters (minimum 20)
+                    </p>
+                  </div>
+
+                  {/* Submit Button */}
+                  <ClickSpark color="#8400FF" sparkCount={20} sparkSize={5}>
+                    <button
+                      type="submit"
+                      disabled={formStatus === 'loading' || formStatus === 'success'}
+                      className={`w-full px-8 py-4 rounded-lg font-semibold text-sm transition-all ${
+                        formStatus === 'success'
+                          ? 'bg-green-500 text-white'
+                          : formStatus === 'loading'
+                          ? 'bg-purple-500/50 text-white/70 cursor-not-allowed'
+                          : 'bg-purple-500 text-white hover:bg-purple-600 hover:scale-[1.02]'
+                      }`}
+                    >
+                      {formStatus === 'loading' && (
+                        <span className="flex items-center justify-center gap-2">
+                          <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          Processing...
+                        </span>
+                      )}
+                      {formStatus === 'success' && (
+                        <span className="flex items-center justify-center gap-2">
+                          <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                          Request Submitted!
+                        </span>
+                      )}
+                      {formStatus === 'idle' && 'Submit Request'}
+                    </button>
+                  </ClickSpark>
+
+                  {/* Success Message */}
+                  {formStatus === 'success' && (
+                    <div className="mt-4 p-4 bg-green-500/10 border border-green-500/50 rounded-lg">
+                      <p className="text-green-400 text-center text-sm">
+                        Your request has been received! We'll review your application and get back to you soon.
+                      </p>
+                    </div>
+                  )}
+                </form>
+                </div>
+              </PulseBorder>
+            </div>
+          </ScrollReveal>
         </div>
-      </section>
-
-      {/* Contact/Join Section */}
-      <section id="contact" className="py-24 bg-terminal-bg border-t border-terminal-border">
-        <div className="container mx-auto px-6 max-w-4xl">
-          <div className="text-center mb-12">
-            <h2 className="text-5xl font-bold text-matrix-green mb-4 font-mono">Join DedSec</h2>
-            <div className="h-1 w-24 bg-matrix-green mx-auto mb-6"></div>
-            <p className="text-terminal-muted text-xl">
-              We're looking for skilled individuals passionate about cybersecurity and CTF competitions.
-            </p>
-          </div>
-
-          <div className="bg-terminal-card border-2 border-matrix-green/30 rounded-lg p-10 mb-10">
-            <h3 className="text-2xl font-bold text-matrix-green mb-8 text-center">
-              What We Look For
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="flex items-start gap-4 group">
-                <div className="bg-matrix-green/10 p-3 rounded-lg group-hover:bg-matrix-green/20 transition-colors">
-                  <Shield className="w-6 h-6 text-matrix-green" />
-                </div>
-                <div>
-                  <div className="text-terminal-text font-bold mb-1">CTF Experience</div>
-                  <div className="text-terminal-muted text-sm">
-                    Active competitor or eager learner
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-4 group">
-                <div className="bg-matrix-green/10 p-3 rounded-lg group-hover:bg-matrix-green/20 transition-colors">
-                  <Users className="w-6 h-6 text-matrix-green" />
-                </div>
-                <div>
-                  <div className="text-terminal-text font-bold mb-1">Team Collaboration</div>
-                  <div className="text-terminal-muted text-sm">
-                    Strong communicator and team player
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-4 group">
-                <div className="bg-matrix-green/10 p-3 rounded-lg group-hover:bg-matrix-green/20 transition-colors">
-                  <FileText className="w-6 h-6 text-matrix-green" />
-                </div>
-                <div>
-                  <div className="text-terminal-text font-bold mb-1">Knowledge Sharing</div>
-                  <div className="text-terminal-muted text-sm">
-                    Contribute writeups and learnings
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-4 group">
-                <div className="bg-matrix-green/10 p-3 rounded-lg group-hover:bg-matrix-green/20 transition-colors">
-                  <Terminal className="w-6 h-6 text-matrix-green" />
-                </div>
-                <div>
-                  <div className="text-terminal-text font-bold mb-1">Technical Skills</div>
-                  <div className="text-terminal-muted text-sm">
-                    Any cybersecurity domain
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Contact Form */}
-          <div className="bg-terminal-card border-2 border-matrix-green rounded-lg p-10 relative overflow-hidden">
-            <div className="absolute bottom-0 left-0 w-64 h-64 bg-matrix-green/5 rounded-full blur-3xl"></div>
-            <div className="relative z-10">
-              <h3 className="text-3xl font-bold text-matrix-green mb-8 text-center">
-                Request Access
-              </h3>
-              <form className="space-y-6">
-                <div>
-                  <input
-                    type="text"
-                    placeholder="Full Name"
-                    className="w-full bg-terminal-bg border-2 border-terminal-border rounded-lg px-6 py-4 text-terminal-text placeholder:text-terminal-muted focus:border-matrix-green focus:outline-none transition-colors font-mono"
-                  />
-                </div>
-                <div>
-                  <input
-                    type="email"
-                    placeholder="Email Address"
-                    className="w-full bg-terminal-bg border-2 border-terminal-border rounded-lg px-6 py-4 text-terminal-text placeholder:text-terminal-muted focus:border-matrix-green focus:outline-none transition-colors font-mono"
-                  />
-                </div>
-                <div>
-                  <textarea
-                    placeholder="Tell us about your CTF experience, technical skills, and why you want to join DedSec..."
-                    rows="6"
-                    className="w-full bg-terminal-bg border-2 border-terminal-border rounded-lg px-6 py-4 text-terminal-text placeholder:text-terminal-muted focus:border-matrix-green focus:outline-none transition-colors font-mono resize-none"
-                  ></textarea>
-                </div>
-                <button
-                  type="submit"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    alert('Request submitted successfully! Our team will review and contact you soon.');
-                  }}
-                  className="w-full bg-matrix-green text-terminal-bg py-5 rounded-lg font-bold text-xl hover:bg-matrix-dark transition-all hover:scale-105 shadow-[0_0_20px_rgba(0,255,0,0.3)] hover:shadow-[0_0_40px_rgba(0,255,0,0.5)]"
-                >
-                  SUBMIT REQUEST
-                </button>
-              </form>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer className="bg-terminal-card border-t-2 border-matrix-green/30 py-12">
-        <div className="container mx-auto px-6">
-          <div className="flex flex-col items-center">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="text-5xl">💀</div>
-              <div className="text-matrix-green font-bold text-3xl font-mono">DedSec</div>
-            </div>
-
-            <div className="text-terminal-muted text-sm mb-6 font-mono">
-              Elite CTF Team | Est. 2025
-            </div>
-
-            <div className="flex gap-8 text-terminal-muted mb-8">
-              <a
-                href="#"
-                className="hover:text-matrix-green transition-colors text-sm uppercase tracking-wider"
-              >
-                GitHub
-              </a>
-              <a
-                href="#"
-                className="hover:text-matrix-green transition-colors text-sm uppercase tracking-wider"
-              >
-                Discord
-              </a>
-              <a
-                href="#"
-                className="hover:text-matrix-green transition-colors text-sm uppercase tracking-wider"
-              >
-                CTFTime
-              </a>
-            </div>
-
-            <div className="text-terminal-muted text-xs font-mono">
-              &copy; 2025 DedSec. All rights reserved.
-            </div>
-          </div>
-        </div>
-      </footer>
+      </div>
     </div>
   );
 }

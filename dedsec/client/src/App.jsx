@@ -7,6 +7,7 @@ import Writeups from './pages/Writeups';
 import Announcements from './pages/Announcements';
 import Stats from './pages/Stats';
 import Admin from './pages/Admin';
+import NotFound from './pages/NotFound';
 
 function App() {
   return (
@@ -20,6 +21,7 @@ function App() {
         <Route path="/announcements" element={<Announcements />} />
         <Route path="/stats" element={<Stats />} />
         <Route path="/admin" element={<Admin />} />
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </Router>
   );
