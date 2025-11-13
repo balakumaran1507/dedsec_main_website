@@ -87,7 +87,7 @@ function DashboardHome({ user }) {
   const ratingPoints = rating?.rating_points || rankings?.ourTeam?.points || 0;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6 px-2 md:px-0">
       {/* Error Banner */}
       {error && (
         <div className="bg-yellow-900/20 border border-yellow-700 rounded-xl p-4 text-yellow-200 text-sm">
@@ -96,36 +96,36 @@ function DashboardHome({ user }) {
       )}
 
       {/* Team Hero Section */}
-      <div className="relative bg-gradient-to-br from-purple-900/30 via-[#13131a] to-purple-900/20 border border-purple-500/30 rounded-2xl p-8 overflow-hidden">
+      <div className="relative bg-gradient-to-br from-purple-900/30 via-[#13131a] to-purple-900/20 border border-purple-500/30 rounded-xl md:rounded-2xl p-4 md:p-8 overflow-hidden">
         {/* Background Glow */}
         <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-transparent opacity-50 blur-3xl" />
 
-        <div className="relative z-10 flex items-start justify-between">
-          <div>
-            <div className="flex items-center gap-3 mb-2">
+        <div className="relative z-10 flex flex-col md:flex-row items-start justify-between gap-4">
+          <div className="flex-1">
+            <div className="flex items-center gap-2 md:gap-3 mb-2">
               {teamData?.logo && (
                 <img
                   src={teamData.logo}
                   alt="Team Logo"
-                  className="w-12 h-12 rounded-lg"
+                  className="w-10 h-10 md:w-12 md:h-12 rounded-lg flex-shrink-0"
                 />
               )}
-              <div>
-                <h1 className="text-4xl font-bold text-white" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+              <div className="min-w-0">
+                <h1 className="text-2xl md:text-4xl font-bold text-white truncate" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
                   {TEAM_NAME}
                 </h1>
-                <p className="text-purple-400 text-sm flex items-center gap-2 mt-1">
-                  <Globe size={14} />
-                  {teamData?.country || 'International'} • {currentYear} Season
+                <p className="text-purple-400 text-xs md:text-sm flex items-center gap-1 md:gap-2 mt-1">
+                  <Globe size={12} className="md:w-3.5 md:h-3.5 flex-shrink-0" />
+                  <span className="truncate">{teamData?.country || 'International'} • {currentYear} Season</span>
                 </p>
               </div>
             </div>
           </div>
 
           {/* Quick Stats */}
-          <div className="text-right">
-            <div className="text-sm text-white/50 mb-1">Global Rank</div>
-            <div className="text-4xl font-bold text-purple-400">
+          <div className="text-left md:text-right w-full md:w-auto">
+            <div className="text-xs md:text-sm text-white/50 mb-1">Global Rank</div>
+            <div className="text-2xl md:text-4xl font-bold text-purple-400">
               {globalRank !== 'N/A' ? `#${globalRank}` : 'Unranked'}
             </div>
           </div>

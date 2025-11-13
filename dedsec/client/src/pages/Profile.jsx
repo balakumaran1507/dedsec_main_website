@@ -113,7 +113,7 @@ function Profile() {
 
   return (
     <Layout>
-      <div className="max-w-6xl mx-auto px-6 py-8 space-y-6">
+      <div className="max-w-6xl mx-auto px-4 md:px-6 py-4 md:py-8 space-y-4 md:space-y-6">
         {/* Test Account Notice */}
         {isTestAccount && (
           <div className="bg-yellow-900/20 border border-yellow-500/50 rounded-xl p-4 text-center">
@@ -133,52 +133,52 @@ function Profile() {
             thickness={electricTier.thickness}
             style={{ borderRadius: 16 }}
           >
-            <div className="bg-[#13131a]/60 backdrop-blur-xl rounded-xl p-8 relative overflow-hidden">
+            <div className="bg-[#13131a]/60 backdrop-blur-xl rounded-xl p-4 md:p-8 relative overflow-hidden">
               {/* Electric Tier Badge */}
-              <div className="absolute top-4 right-4">
-                <div className="flex items-center gap-2 bg-black/50 backdrop-blur-sm border border-purple-500/50 rounded-full px-4 py-2">
-                  <Zap className="w-4 h-4" style={{ color: electricTier.color }} />
-                  <span className="text-sm font-bold" style={{ color: electricTier.color }}>
+              <div className="absolute top-2 right-2 md:top-4 md:right-4 z-10">
+                <div className="flex items-center gap-2 bg-black/50 backdrop-blur-sm border border-purple-500/50 rounded-full px-3 py-1.5 md:px-4 md:py-2">
+                  <Zap className="w-3 h-3 md:w-4 md:h-4" style={{ color: electricTier.color }} />
+                  <span className="text-xs md:text-sm font-bold" style={{ color: electricTier.color }}>
                     {electricTier.name}
                   </span>
                 </div>
               </div>
-          <div className="flex items-start justify-between">
-            <div className="flex items-center gap-6">
+          <div className="flex flex-col md:flex-row items-start md:items-start justify-between gap-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 md:gap-6 w-full md:w-auto">
               {/* Profile Picture */}
               <div className="w-24 h-24 rounded-full bg-purple-500/20 border-2 border-purple-400 flex items-center justify-center">
                 <User className="w-12 h-12 text-purple-400" />
               </div>
 
               {/* User Info */}
-              <div>
-                <div className="flex items-center gap-3 mb-2">
-                  <h1 className="text-3xl font-bold text-purple-400">
+              <div className="flex-1 min-w-0 pr-20 sm:pr-0">
+                <div className="flex flex-wrap items-center gap-2 md:gap-3 mb-2">
+                  <h1 className="text-xl md:text-3xl font-bold text-purple-400 truncate">
                     {userData.displayName || username}
                   </h1>
 
                   {/* Founder Badge (0x00) */}
                   {hasFounderBadge && (
-                    <span className="px-3 py-1 bg-purple-500/20 border border-purple-400 rounded text-purple-400 text-sm font-mono animate-pulse">
+                    <span className="px-2 py-0.5 md:px-3 md:py-1 bg-purple-500/20 border border-purple-400 rounded text-purple-400 text-xs md:text-sm font-mono animate-pulse">
                       0x00
                     </span>
                   )}
                 </div>
 
-                <div className="flex items-center gap-4 text-white/60 text-sm">
-                  <span>{user.email}</span>
-                  <span>•</span>
-                  <span>Joined {userData.joinDate?.toDate().toLocaleDateString()}</span>
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-white/60 text-xs md:text-sm">
+                  <span className="truncate">{user.email}</span>
+                  <span className="hidden sm:inline">•</span>
+                  <span className="text-xs">Joined {userData.joinDate?.toDate().toLocaleDateString()}</span>
                 </div>
-                
+
                 {/* Hex Title */}
-                <div className="mt-4 flex items-center gap-3">
-                  <span className="text-4xl">{titleInfo.icon}</span>
-                  <div>
-                    <div className={`font-mono text-2xl font-bold ${titleInfo.color}`}>
+                <div className="mt-3 md:mt-4 flex items-center gap-2 md:gap-3">
+                  <span className="text-2xl md:text-4xl">{titleInfo.icon}</span>
+                  <div className="min-w-0">
+                    <div className={`font-mono text-lg md:text-2xl font-bold ${titleInfo.color}`}>
                       {userData.title}
                     </div>
-                    <div className="text-white/50 text-sm">
+                    <div className="text-white/50 text-xs md:text-sm truncate">
                       {titleInfo.name} - {titleInfo.description}
                     </div>
                   </div>
@@ -186,7 +186,7 @@ function Profile() {
 
                 {/* Progress to next title */}
                 {scoreNeeded > 0 && (
-                  <div className="mt-3 w-64">
+                  <div className="mt-3 max-w-full sm:max-w-sm">
                     <div className="flex justify-between text-xs text-white/50 mb-1">
                       <span>Progress to next title</span>
                       <span>{scoreNeeded} pts needed</span>
@@ -203,15 +203,15 @@ function Profile() {
             </div>
 
             {/* Contribution Score */}
-            <div className="text-right space-y-2">
+            <div className="text-left md:text-right space-y-1 md:space-y-2 w-full md:w-auto">
               <div>
-                <div className="text-4xl font-bold text-purple-400">
+                <div className="text-2xl md:text-4xl font-bold text-purple-400">
                   {userData.contributionScore || 0}
                 </div>
                 <div className="text-xs text-white/50">Contribution Score</div>
               </div>
               {userData.rank > 0 && (
-                <div className="text-sm text-white/60">
+                <div className="text-xs md:text-sm text-white/60">
                   Rank #{userData.rank}
                 </div>
               )}
@@ -220,43 +220,43 @@ function Profile() {
             </div>
           </ElectricBorder>
         ) : (
-          <div className="bg-[#13131a]/60 backdrop-blur-xl rounded-xl p-8">
-            <div className="flex items-start justify-between">
-            <div className="flex items-center gap-6">
+          <div className="bg-[#13131a]/60 backdrop-blur-xl rounded-xl p-4 md:p-8">
+            <div className="flex flex-col md:flex-row items-start md:items-start justify-between gap-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 md:gap-6 w-full md:w-auto">
               {/* Profile Picture */}
               <div className="w-24 h-24 rounded-full bg-purple-500/20 border-2 border-purple-400 flex items-center justify-center">
                 <User className="w-12 h-12 text-purple-400" />
               </div>
 
               {/* User Info */}
-              <div>
-                <div className="flex items-center gap-3 mb-2">
-                  <h1 className="text-3xl font-bold text-purple-400">
+              <div className="flex-1 min-w-0">
+                <div className="flex flex-wrap items-center gap-2 md:gap-3 mb-2">
+                  <h1 className="text-xl md:text-3xl font-bold text-purple-400 truncate">
                     {userData.displayName || username}
                   </h1>
 
                   {/* Founder Badge (0x00) */}
                   {hasFounderBadge && (
-                    <span className="px-3 py-1 bg-purple-500/20 border border-purple-400 rounded text-purple-400 text-sm font-mono animate-pulse">
+                    <span className="px-2 py-0.5 md:px-3 md:py-1 bg-purple-500/20 border border-purple-400 rounded text-purple-400 text-xs md:text-sm font-mono animate-pulse">
                       0x00
                     </span>
                   )}
                 </div>
 
-                <div className="flex items-center gap-4 text-white/60 text-sm">
-                  <span>{user.email}</span>
-                  <span>•</span>
-                  <span>Joined {userData.joinDate?.toDate().toLocaleDateString()}</span>
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-white/60 text-xs md:text-sm">
+                  <span className="truncate">{user.email}</span>
+                  <span className="hidden sm:inline">•</span>
+                  <span className="text-xs">Joined {userData.joinDate?.toDate().toLocaleDateString()}</span>
                 </div>
 
                 {/* Hex Title */}
-                <div className="mt-4 flex items-center gap-3">
-                  <span className="text-4xl">{titleInfo.icon}</span>
-                  <div>
-                    <div className={`font-mono text-2xl font-bold ${titleInfo.color}`}>
+                <div className="mt-3 md:mt-4 flex items-center gap-2 md:gap-3">
+                  <span className="text-2xl md:text-4xl">{titleInfo.icon}</span>
+                  <div className="min-w-0">
+                    <div className={`font-mono text-lg md:text-2xl font-bold ${titleInfo.color}`}>
                       {userData.title}
                     </div>
-                    <div className="text-white/50 text-sm">
+                    <div className="text-white/50 text-xs md:text-sm truncate">
                       {titleInfo.name} - {titleInfo.description}
                     </div>
                   </div>
@@ -264,7 +264,7 @@ function Profile() {
 
                 {/* Progress to next title */}
                 {scoreNeeded > 0 && (
-                  <div className="mt-3 w-64">
+                  <div className="mt-3 max-w-full sm:max-w-sm">
                     <div className="flex justify-between text-xs text-white/50 mb-1">
                       <span>Progress to next title</span>
                       <span>{scoreNeeded} pts needed</span>
@@ -281,15 +281,15 @@ function Profile() {
             </div>
 
             {/* Contribution Score */}
-            <div className="text-right space-y-2">
+            <div className="text-left md:text-right space-y-1 md:space-y-2 w-full md:w-auto">
               <div>
-                <div className="text-4xl font-bold text-purple-400">
+                <div className="text-2xl md:text-4xl font-bold text-purple-400">
                   {userData.contributionScore || 0}
                 </div>
                 <div className="text-xs text-white/50">Contribution Score</div>
               </div>
               {userData.rank > 0 && (
-                <div className="text-sm text-white/60">
+                <div className="text-xs md:text-sm text-white/60">
                   Rank #{userData.rank}
                 </div>
               )}
