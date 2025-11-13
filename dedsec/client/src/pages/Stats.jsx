@@ -1,11 +1,8 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { auth, db } from '../utils/firebase';
-import { collection, getDocs, query, orderBy, limit } from 'firebase/firestore';
+import { collection, getDocs } from 'firebase/firestore';
 import toast, { Toaster } from 'react-hot-toast';
-import Aurora from '../components/Aurora';
-import FloatingOrbs from '../components/FloatingOrbs';
-import ScrollReveal from '../components/ScrollReveal';
+import Layout from '../components/Layout';
 import {
   TrendingUp,
   Users,
@@ -21,7 +18,6 @@ import {
 
 function Stats() {
   const [user, setUser] = useState(null);
-  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
     totalMembers: 0,
@@ -36,12 +32,10 @@ function Stats() {
       if (currentUser) {
         setUser(currentUser);
         loadStats();
-      } else {
-        navigate('/');
       }
     });
     return () => unsubscribe();
-  }, [navigate]);
+  }, []);
 
   const loadStats = async () => {
     setLoading(true);
@@ -99,40 +93,24 @@ function Stats() {
     setLoading(false);
   };
 
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-terminal-bg flex items-center justify-center">
-        <Loader className="w-8 h-8 text-matrix-green animate-spin" />
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen bg-terminal-bg text-terminal-text p-6">
+    <Layout>
       <Toaster position="top-right" />
 
-      {/* Back Button */}
-      <button
-        onClick={() => navigate('/dashboard')}
-        className="mb-6 text-terminal-muted hover:text-matrix-green transition-colors flex items-center gap-2"
-      >
-        ← Back to Dashboard
-      </button>
-
-      <div className="max-w-6xl mx-auto">
+      <div className="max-w-6xl mx-auto px-6 py-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-matrix-green mb-2 flex items-center gap-3">
+          <h1 className="text-4xl font-bold text-purple-400 mb-2 flex items-center gap-3" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
             <TrendingUp className="w-10 h-10" />
             Team Statistics
           </h1>
-          <p className="text-terminal-muted">Performance metrics & achievements</p>
+          <p className="text-white/60">Performance metrics & achievements</p>
         </div>
 
         {loading ? (
           <div className="text-center py-20">
-            <Loader className="w-12 h-12 text-matrix-green animate-spin mx-auto mb-4" />
-            <p className="text-terminal-muted">Loading stats...</p>
+            <Loader className="w-12 h-12 text-purple-400 animate-spin mx-auto mb-4" />
+            <p className="text-white/50">Loading stats...</p>
           </div>
         ) : (
           <>
@@ -142,7 +120,7 @@ function Stats() {
                 icon={Users}
                 label="Team Members"
                 value={stats.totalMembers}
-                color="text-matrix-green"
+                color="text-purple-400"
               />
               <StatCard
                 icon={FileText}
@@ -165,14 +143,14 @@ function Stats() {
             </div>
 
             {/* Top Contributors */}
-            <div className="bg-terminal-card border border-terminal-border rounded-lg p-6 mb-8">
+            <div className="bg-[#13131a] border border-purple-500/20 rounded-xl p-6 mb-8">
               <div className="flex items-center gap-3 mb-6">
-                <Award className="w-6 h-6 text-matrix-green" />
-                <h2 className="text-2xl font-bold text-terminal-text">Top Contributors</h2>
+                <Award className="w-6 h-6 text-purple-400" />
+                <h2 className="text-2xl font-bold text-white" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>Top Contributors</h2>
               </div>
 
               {stats.topContributors.length === 0 ? (
-                <div className="text-center py-12 text-terminal-muted">
+                <div className="text-center py-12 text-white/60">
                   <Award className="w-16 h-16 mx-auto mb-4 opacity-30" />
                   <p>No contributors yet. Start uploading writeups!</p>
                 </div>
@@ -188,53 +166,53 @@ function Stats() {
             {/* Additional Stats */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Contribution Breakdown */}
-              <div className="bg-terminal-card border border-terminal-border rounded-lg p-6">
+              <div className="bg-[#13131a] border border-purple-500/20 rounded-xl p-6">
                 <div className="flex items-center gap-3 mb-4">
-                  <Target className="w-6 h-6 text-matrix-green" />
-                  <h2 className="text-xl font-bold text-terminal-text">Contribution Breakdown</h2>
+                  <Target className="w-6 h-6 text-purple-400" />
+                  <h2 className="text-xl font-bold text-white" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>Contribution Breakdown</h2>
                 </div>
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-terminal-muted">Writeups</span>
-                    <span className="text-terminal-text font-semibold">{stats.totalWriteups}</span>
+                    <span className="text-white/60">Writeups</span>
+                    <span className="text-white font-semibold">{stats.totalWriteups}</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-terminal-muted">Upvotes Given</span>
-                    <span className="text-terminal-text font-semibold">{stats.totalUpvotes}</span>
+                    <span className="text-white/60">Upvotes Given</span>
+                    <span className="text-white font-semibold">{stats.totalUpvotes}</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-terminal-muted">Active Members</span>
-                    <span className="text-terminal-text font-semibold">{stats.totalMembers}</span>
+                    <span className="text-white/60">Active Members</span>
+                    <span className="text-white font-semibold">{stats.totalMembers}</span>
                   </div>
                 </div>
               </div>
 
               {/* Team Progress */}
-              <div className="bg-terminal-card border border-terminal-border rounded-lg p-6">
+              <div className="bg-[#13131a] border border-purple-500/20 rounded-xl p-6">
                 <div className="flex items-center gap-3 mb-4">
-                  <Calendar className="w-6 h-6 text-matrix-green" />
-                  <h2 className="text-xl font-bold text-terminal-text">Team Activity</h2>
+                  <Calendar className="w-6 h-6 text-purple-400" />
+                  <h2 className="text-xl font-bold text-white" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>Team Activity</h2>
                 </div>
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-terminal-muted">Avg. Writeups/Member</span>
-                    <span className="text-terminal-text font-semibold">
-                      {stats.totalMembers > 0 
-                        ? (stats.totalWriteups / stats.totalMembers).toFixed(1) 
+                    <span className="text-white/60">Avg. Writeups/Member</span>
+                    <span className="text-white font-semibold">
+                      {stats.totalMembers > 0
+                        ? (stats.totalWriteups / stats.totalMembers).toFixed(1)
                         : '0'}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-terminal-muted">Avg. Upvotes/Writeup</span>
-                    <span className="text-terminal-text font-semibold">
-                      {stats.totalWriteups > 0 
-                        ? (stats.totalUpvotes / stats.totalWriteups).toFixed(1) 
+                    <span className="text-white/60">Avg. Upvotes/Writeup</span>
+                    <span className="text-white font-semibold">
+                      {stats.totalWriteups > 0
+                        ? (stats.totalUpvotes / stats.totalWriteups).toFixed(1)
                         : '0'}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-terminal-muted">CTF Participation</span>
-                    <span className="text-terminal-text font-semibold">{stats.totalCTFEvents}</span>
+                    <span className="text-white/60">CTF Participation</span>
+                    <span className="text-white font-semibold">{stats.totalCTFEvents}</span>
                   </div>
                 </div>
               </div>
@@ -242,16 +220,16 @@ function Stats() {
           </>
         )}
       </div>
-    </div>
+    </Layout>
   );
 }
 
 // Stat Card Component
 function StatCard({ icon: Icon, label, value, color }) {
   return (
-    <div className="bg-terminal-card border border-terminal-border rounded-lg p-6">
+    <div className="bg-[#13131a] border border-purple-500/20 rounded-xl p-6 hover:border-purple-500/40 transition-colors">
       <div className="flex items-center justify-between mb-2">
-        <span className="text-terminal-muted text-sm">{label}</span>
+        <span className="text-white/60 text-sm" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>{label}</span>
         <Icon className={`w-5 h-5 ${color}`} />
       </div>
       <div className={`text-3xl font-bold ${color}`}>{value}</div>
@@ -283,23 +261,23 @@ function ContributorCard({ contributor }) {
       case 3:
         return 'border-amber-700';
       default:
-        return 'border-terminal-border';
+        return 'border-purple-500/20';
     }
   };
 
   return (
-    <div className={`bg-terminal-bg border-2 ${getRankColor(contributor.rank)} rounded-lg p-6 flex items-center gap-4`}>
+    <div className={`bg-[#13131a] border-2 ${getRankColor(contributor.rank)} rounded-xl p-6 flex items-center gap-4`}>
       <div className="flex-shrink-0">
         {getRankIcon(contributor.rank)}
       </div>
       <div className="flex-1">
         <div className="flex items-center gap-3 mb-2">
-          <h3 className="text-xl font-bold text-terminal-text">{contributor.displayName}</h3>
-          <span className="text-sm px-3 py-1 bg-matrix-dim text-matrix-green rounded border border-matrix-green font-mono">
+          <h3 className="text-xl font-bold text-white" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>{contributor.displayName}</h3>
+          <span className="text-sm px-3 py-1 bg-purple-500/20 text-purple-400 rounded border border-purple-500/50 font-mono">
             {contributor.title}
           </span>
         </div>
-        <div className="flex items-center gap-4 text-sm text-terminal-muted">
+        <div className="flex items-center gap-4 text-sm text-white/60">
           <span className="flex items-center gap-1">
             <FileText size={14} />
             {contributor.stats?.writeupCount || 0} writeups
@@ -315,10 +293,10 @@ function ContributorCard({ contributor }) {
         </div>
       </div>
       <div className="text-right">
-        <div className="text-2xl font-bold text-matrix-green">
+        <div className="text-2xl font-bold text-purple-400">
           {contributor.contributionScore || 0}
         </div>
-        <div className="text-xs text-terminal-muted">score</div>
+        <div className="text-xs text-white/50">score</div>
       </div>
     </div>
   );

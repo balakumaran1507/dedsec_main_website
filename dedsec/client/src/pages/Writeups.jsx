@@ -1,17 +1,17 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { auth } from '../utils/firebase';
-import { 
-  getWriteups, 
-  createWriteup, 
-  toggleUpvote, 
-  updateWriteupNotes 
+import {
+  getWriteups,
+  createWriteup,
+  toggleUpvote,
+  updateWriteupNotes
 } from '../utils/firestore';
 import toast, { Toaster } from 'react-hot-toast';
 import { testFirebaseConnection } from '../utils/firebaseTest';
-import { 
-  BookOpen, 
-  Upload, 
+import Layout from '../components/Layout';
+import {
+  BookOpen,
+  Upload,
   Search,
   Award,
   Eye,
@@ -35,7 +35,6 @@ const RANK_OPTIONS = [
 
 function Writeups() {
   const [user, setUser] = useState(null);
-  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [showUploadModal, setShowUploadModal] = useState(false);
@@ -61,12 +60,10 @@ function Writeups() {
           await testFirebaseConnection();
         }
         loadWriteups();
-      } else {
-        navigate('/');
       }
     });
     return () => unsubscribe();
-  }, [navigate]);
+  }, []);
 
   const loadWriteups = async () => {
     console.log('🔍 Loading writeups...');
@@ -130,7 +127,7 @@ function Writeups() {
       const result = await createWriteup(writeupData);
 
       if (result.success) {
-        toast.success('Writeup uploaded successfully! 🎉');
+        toast.success('Writeup uploaded successfully!');
         setShowUploadModal(false);
         setNewWriteup({
           title: '',
@@ -163,63 +160,54 @@ function Writeups() {
     }
   };
 
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-terminal-bg flex items-center justify-center">
-        <Loader className="w-8 h-8 text-matrix-green animate-spin" />
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen bg-terminal-bg text-terminal-text p-6">
+    <Layout>
       <Toaster position="top-right" />
-      <button onClick={() => navigate('/dashboard')} className="mb-6 text-terminal-muted hover:text-matrix-green transition-colors">← Back</button>
 
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-7xl mx-auto px-6 py-8">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-4xl font-bold text-matrix-green mb-2 flex items-center gap-3">
+            <h1 className="text-4xl font-bold text-purple-400 mb-2 flex items-center gap-3" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
               <BookOpen className="w-10 h-10" />Writeups Library
             </h1>
-            <p className="text-terminal-muted">Team knowledge base & CTF solutions</p>
+            <p className="text-white/60">Team knowledge base & CTF solutions</p>
           </div>
-          <button onClick={() => setShowUploadModal(true)} className="bg-matrix-green text-terminal-bg px-6 py-3 rounded font-semibold hover:bg-matrix-dark transition-colors flex items-center gap-2">
+          <button onClick={() => setShowUploadModal(true)} className="bg-purple-500 text-white px-6 py-3 rounded font-semibold hover:bg-purple-600 transition-colors flex items-center gap-2">
             <Upload size={20} />Upload Writeup
           </button>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-terminal-card border border-terminal-border rounded-lg p-6">
+          <div className="bg-[#13131a] border border-purple-500/20 rounded-xl p-6 hover:border-purple-500/40 transition-colors">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-terminal-muted text-sm">Total Writeups</span>
-              <FileText className="w-5 h-5 text-matrix-green" />
+              <span className="text-white/60 text-sm">Total Writeups</span>
+              <FileText className="w-5 h-5 text-purple-400" />
             </div>
-            <div className="text-3xl font-bold text-matrix-green">{writeups.length}</div>
+            <div className="text-3xl font-bold text-purple-400">{writeups.length}</div>
           </div>
-          <div className="bg-terminal-card border border-terminal-border rounded-lg p-6">
+          <div className="bg-[#13131a] border border-purple-500/20 rounded-xl p-6 hover:border-purple-500/40 transition-colors">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-terminal-muted text-sm">Your Writeups</span>
-              <Award className="w-5 h-5 text-matrix-green" />
+              <span className="text-white/60 text-sm">Your Writeups</span>
+              <Award className="w-5 h-5 text-purple-400" />
             </div>
-            <div className="text-3xl font-bold text-matrix-green">{writeups.filter(w => w.authorUid === user.uid).length}</div>
+            <div className="text-3xl font-bold text-purple-400">{writeups.filter(w => w.authorUid === user.uid).length}</div>
           </div>
-          <div className="bg-terminal-card border border-terminal-border rounded-lg p-6">
+          <div className="bg-[#13131a] border border-purple-500/20 rounded-xl p-6 hover:border-purple-500/40 transition-colors">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-terminal-muted text-sm">Total Upvotes</span>
-              <ThumbsUp className="w-5 h-5 text-matrix-green" />
+              <span className="text-white/60 text-sm">Total Upvotes</span>
+              <ThumbsUp className="w-5 h-5 text-purple-400" />
             </div>
-            <div className="text-3xl font-bold text-matrix-green">{writeups.reduce((sum, w) => sum + (w.upvotes || 0), 0)}</div>
+            <div className="text-3xl font-bold text-purple-400">{writeups.reduce((sum, w) => sum + (w.upvotes || 0), 0)}</div>
           </div>
         </div>
 
-        <div className="bg-terminal-card border border-terminal-border rounded-lg p-4 mb-6">
+        <div className="bg-[#13131a] border border-purple-500/20 rounded-xl p-4 mb-6">
           <div className="flex items-center gap-4 flex-wrap">
-            <div className="flex-1 flex items-center gap-2 bg-terminal-bg border border-terminal-border rounded px-3 py-2">
-              <Search className="w-4 h-4 text-terminal-muted" />
-              <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Search writeups..." className="flex-1 bg-transparent text-terminal-text outline-none text-sm" />
+            <div className="flex-1 flex items-center gap-2 bg-[#0a0a0f] border border-purple-500/20 rounded-lg px-3 py-2">
+              <Search className="w-4 h-4 text-white/60" />
+              <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Search writeups..." className="flex-1 bg-transparent text-white placeholder-white/50 outline-none text-sm" />
             </div>
-            <select value={selectedCategory} onChange={(e) => setSelectedCategory(e.target.value)} className="bg-terminal-bg border border-terminal-border rounded px-3 py-2 text-terminal-text text-sm">
+            <select value={selectedCategory} onChange={(e) => setSelectedCategory(e.target.value)} className="bg-[#0a0a0f] border border-purple-500/20 rounded-lg px-3 py-2 text-white text-sm focus:border-purple-400 transition-colors">
               <option value="All">All Categories</option>
               {CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
             </select>
@@ -227,7 +215,7 @@ function Writeups() {
         </div>
 
         {loading ? (
-          <div className="text-center py-20"><Loader className="w-12 h-12 text-matrix-green animate-spin mx-auto mb-4" /><p className="text-terminal-muted">Loading writeups...</p></div>
+          <div className="text-center py-20"><Loader className="w-12 h-12 text-purple-400 animate-spin mx-auto mb-4" /><p className="text-white/60">Loading writeups...</p></div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredWriteups.map(writeup => (
@@ -243,7 +231,7 @@ function Writeups() {
 
       {showUploadModal && <UploadModal newWriteup={newWriteup} setNewWriteup={setNewWriteup} onUpload={uploadWriteup} onClose={() => setShowUploadModal(false)} />}
       {viewWriteup && <ViewWriteupModal writeup={viewWriteup} currentUser={user} onClose={() => setViewWriteup(null)} onUpvote={handleUpvote} onReload={loadWriteups} />}
-    </div>
+    </Layout>
   );
 }
 
@@ -254,13 +242,13 @@ function WriteupCard({ writeup, currentUserId, onClick, onUpvote }) {
   const formattedDate = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
   return (
-    <div className="bg-terminal-card border border-terminal-border rounded-lg p-6 hover:border-matrix-green transition-all cursor-pointer relative">
+    <div className="bg-[#13131a] border border-purple-500/20 rounded-xl p-6 hover:border-purple-400 transition-all cursor-pointer relative">
       <div onClick={onClick}>
         {writeup.featured && <div className="mb-3"><span className="text-xs px-2 py-1 bg-matrix-dim text-matrix-green rounded border border-matrix-green">⭐ Featured</span></div>}
-        <h3 className="text-lg font-semibold text-terminal-text mb-2">{writeup.title}</h3>
+        <h3 className="text-lg font-semibold text-white mb-2">{writeup.title}</h3>
         <div className="flex items-center gap-2 mb-3 flex-wrap">
-          <span className="text-xs px-2 py-1 rounded bg-terminal-bg text-terminal-muted border border-terminal-border">{writeup.category}</span>
-          <span className="text-xs px-2 py-1 rounded bg-matrix-dim text-matrix-green border border-matrix-green">{rankInfo?.label}</span>
+          <span className="text-xs px-2 py-1 rounded bg-[#0a0a0f] text-white/60 border border-purple-500/20">{writeup.category}</span>
+          <span className="text-xs px-2 py-1 rounded bg-purple-900/30 text-purple-400 border border-purple-500/50">{rankInfo?.label}</span>
         </div>
         <div className="text-sm text-terminal-muted mb-3">
           <div>{writeup.ctfName} - {writeup.challengeName}</div>
@@ -273,7 +261,7 @@ function WriteupCard({ writeup, currentUserId, onClick, onUpvote }) {
           </div>
         </div>
       </div>
-      <button onClick={(e) => onUpvote(writeup.id, e)} className={`absolute top-4 right-4 flex items-center gap-1 px-2 py-1 rounded transition-all ${hasUpvoted ? 'bg-matrix-green text-terminal-bg' : 'bg-terminal-bg border border-terminal-border text-terminal-muted hover:border-matrix-green hover:text-matrix-green'}`}>
+      <button onClick={(e) => onUpvote(writeup.id, e)} className={`absolute top-4 right-4 flex items-center gap-1 px-2 py-1 rounded transition-all ${hasUpvoted ? 'bg-purple-500 text-white' : 'bg-[#0a0a0f] border border-purple-500/20 text-white/60 hover:border-purple-400 hover:text-purple-400'}`}>
         <ThumbsUp size={14} /><span className="text-xs font-semibold">{writeup.upvotes || 0}</span>
       </button>
     </div>
@@ -284,36 +272,36 @@ function UploadModal({ newWriteup, setNewWriteup, onUpload, onClose }) {
   return (
     <>
       <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50" onClick={onClose}></div>
-      <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-terminal-card border-2 border-matrix-green rounded-lg p-6 w-full max-w-3xl max-h-[90vh] overflow-y-auto z-50">
+      <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-[#13131a] border-2 border-purple-500/50 rounded-xl p-6 w-full max-w-3xl max-h-[90vh] overflow-y-auto z-50">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-matrix-green">Upload Writeup</h2>
-          <button onClick={onClose} className="text-terminal-muted hover:text-red-500"><X size={24} /></button>
+          <h2 className="text-2xl font-bold text-purple-400" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>Upload Writeup</h2>
+          <button onClick={onClose} className="text-white/60 hover:text-red-500"><X size={24} /></button>
         </div>
         <div className="space-y-4">
           <div>
             <label className="block text-terminal-muted text-sm mb-2">Writeup Title *</label>
-            <input type="text" value={newWriteup.title} onChange={(e) => setNewWriteup({ ...newWriteup, title: e.target.value })} className="w-full bg-terminal-bg border border-terminal-border rounded px-3 py-2 text-terminal-text" placeholder="SQL Injection - HackTheBox Lame" />
+            <input type="text" value={newWriteup.title} onChange={(e) => setNewWriteup({ ...newWriteup, title: e.target.value })} className="w-full bg-[#0a0a0f] border border-purple-500/20 rounded-lg px-3 py-2 text-white focus:border-purple-400 transition-colors" placeholder="SQL Injection - HackTheBox Lame" />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-terminal-muted text-sm mb-2">CTF Name *</label>
-              <input type="text" value={newWriteup.ctfName} onChange={(e) => setNewWriteup({ ...newWriteup, ctfName: e.target.value })} className="w-full bg-terminal-bg border border-terminal-border rounded px-3 py-2 text-terminal-text" placeholder="HackTheBox" />
+              <input type="text" value={newWriteup.ctfName} onChange={(e) => setNewWriteup({ ...newWriteup, ctfName: e.target.value })} className="w-full bg-[#0a0a0f] border border-purple-500/20 rounded-lg px-3 py-2 text-white focus:border-purple-400 transition-colors" placeholder="HackTheBox" />
             </div>
             <div>
               <label className="block text-terminal-muted text-sm mb-2">Challenge Name *</label>
-              <input type="text" value={newWriteup.challengeName} onChange={(e) => setNewWriteup({ ...newWriteup, challengeName: e.target.value })} className="w-full bg-terminal-bg border border-terminal-border rounded px-3 py-2 text-terminal-text" placeholder="Lame" />
+              <input type="text" value={newWriteup.challengeName} onChange={(e) => setNewWriteup({ ...newWriteup, challengeName: e.target.value })} className="w-full bg-[#0a0a0f] border border-purple-500/20 rounded-lg px-3 py-2 text-white focus:border-purple-400 transition-colors" placeholder="Lame" />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-terminal-muted text-sm mb-2">Category</label>
-              <select value={newWriteup.category} onChange={(e) => setNewWriteup({ ...newWriteup, category: e.target.value })} className="w-full bg-terminal-bg border border-terminal-border rounded px-3 py-2 text-terminal-text">
+              <select value={newWriteup.category} onChange={(e) => setNewWriteup({ ...newWriteup, category: e.target.value })} className="w-full bg-[#0a0a0f] border border-purple-500/20 rounded-lg px-3 py-2 text-white focus:border-purple-400 transition-colors">
                 {CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
               </select>
             </div>
             <div>
               <label className="block text-terminal-muted text-sm mb-2">Your Rank</label>
-              <select value={newWriteup.rank} onChange={(e) => setNewWriteup({ ...newWriteup, rank: e.target.value })} className="w-full bg-terminal-bg border border-terminal-border rounded px-3 py-2 text-terminal-text">
+              <select value={newWriteup.rank} onChange={(e) => setNewWriteup({ ...newWriteup, rank: e.target.value })} className="w-full bg-[#0a0a0f] border border-purple-500/20 rounded-lg px-3 py-2 text-white focus:border-purple-400 transition-colors">
                 {RANK_OPTIONS.map(rank => <option key={rank.value} value={rank.value}>{rank.label}</option>)}
               </select>
             </div>
@@ -331,8 +319,8 @@ function UploadModal({ newWriteup, setNewWriteup, onUpload, onClose }) {
             <textarea value={newWriteup.authorNotes} onChange={(e) => setNewWriteup({ ...newWriteup, authorNotes: e.target.value })} className="w-full bg-terminal-bg border border-terminal-border rounded px-3 py-2 text-terminal-text text-sm" rows="3" placeholder="Additional notes..." />
           </div>
           <div className="flex gap-3 pt-4">
-            <button onClick={onUpload} className="flex-1 bg-matrix-green text-terminal-bg py-3 rounded font-semibold hover:bg-matrix-dark transition-colors">Upload Writeup</button>
-            <button onClick={onClose} className="px-6 bg-terminal-bg border border-terminal-border text-terminal-muted rounded hover:text-terminal-text transition-colors">Cancel</button>
+            <button onClick={onUpload} className="flex-1 bg-purple-500 text-white py-3 rounded font-semibold hover:bg-purple-600 transition-colors">Upload Writeup</button>
+            <button onClick={onClose} className="px-6 bg-[#0a0a0f] border border-purple-500/20 text-white/60 rounded-lg hover:text-white transition-colors">Cancel</button>
           </div>
         </div>
       </div>
@@ -366,50 +354,50 @@ function ViewWriteupModal({ writeup, currentUser, onClose, onUpvote, onReload })
   return (
     <>
       <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50" onClick={onClose}></div>
-      <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-terminal-card border-2 border-matrix-green rounded-lg p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto z-50">
+      <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-terminal-card border-2 border-purple-500/50 rounded-lg p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto z-50">
         <div className="flex items-start justify-between mb-6">
           <div className="flex-1">
-            <h2 className="text-3xl font-bold text-matrix-green mb-2">{writeup.title}</h2>
+            <h2 className="text-3xl font-bold text-purple-400 mb-2" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>{writeup.title}</h2>
             <div className="flex items-center gap-3 text-sm text-terminal-muted">
               <span>by {writeup.authorName}</span><span>•</span><span>{formattedDate}</span><span>•</span><span className="flex items-center gap-1"><Eye size={14} />{writeup.views || 0} views</span>
             </div>
           </div>
-          <button onClick={onClose} className="text-terminal-muted hover:text-red-500"><X size={24} /></button>
+          <button onClick={onClose} className="text-white/60 hover:text-red-500"><X size={24} /></button>
         </div>
         <div className="flex items-center gap-2 mb-6">
-          <span className="text-xs px-3 py-1 rounded bg-terminal-bg text-terminal-muted border border-terminal-border">{writeup.category}</span>
-          <span className="text-xs px-3 py-1 rounded bg-matrix-dim text-matrix-green border border-matrix-green">{RANK_OPTIONS.find(r => r.value === writeup.rank)?.label}</span>
-          <span className="text-xs px-3 py-1 rounded bg-terminal-bg text-terminal-muted border border-terminal-border">{writeup.ctfName}</span>
+          <span className="text-xs px-3 py-1 rounded bg-[#0a0a0f] text-white/60 border border-purple-500/20">{writeup.category}</span>
+          <span className="text-xs px-3 py-1 rounded bg-purple-900/30 text-purple-400 border border-purple-500/50">{RANK_OPTIONS.find(r => r.value === writeup.rank)?.label}</span>
+          <span className="text-xs px-3 py-1 rounded bg-[#0a0a0f] text-white/60 border border-purple-500/20">{writeup.ctfName}</span>
         </div>
         <div className="prose prose-invert max-w-none mb-6">
-          <div className="bg-terminal-bg border border-terminal-border rounded p-6 text-terminal-text whitespace-pre-wrap font-mono text-sm">{writeup.content}</div>
+          <div className="bg-[#0a0a0f] border border-purple-500/20 rounded-lg p-6 text-white whitespace-pre-wrap font-mono text-sm">{writeup.content}</div>
         </div>
         {(writeup.authorNotes || isAuthor) && (
-          <div className="bg-matrix-dim border border-matrix-green rounded p-4 mb-6">
+          <div className="bg-purple-900/20 border border-purple-500/50 rounded-lg p-4 mb-6">
             <div className="flex items-center justify-between mb-2">
-              <h3 className="text-sm font-semibold text-matrix-green">Author Notes</h3>
-              {isAuthor && !isEditingNotes && <button onClick={() => setIsEditingNotes(true)} className="text-xs text-terminal-muted hover:text-matrix-green flex items-center gap-1"><Edit2 size={12} />Edit</button>}
+              <h3 className="text-sm font-semibold text-purple-400">Author Notes</h3>
+              {isAuthor && !isEditingNotes && <button onClick={() => setIsEditingNotes(true)} className="text-xs text-white/60 hover:text-purple-400 flex items-center gap-1"><Edit2 size={12} />Edit</button>}
             </div>
             {isEditingNotes ? (
               <div>
-                <textarea value={editedNotes} onChange={(e) => setEditedNotes(e.target.value)} className="w-full bg-terminal-bg border border-terminal-border rounded px-3 py-2 text-terminal-text text-sm" rows="3" />
+                <textarea value={editedNotes} onChange={(e) => setEditedNotes(e.target.value)} className="w-full bg-[#0a0a0f] border border-purple-500/20 rounded-lg px-3 py-2 text-white text-sm focus:border-purple-400 transition-colors" rows="3" />
                 <div className="flex gap-2 mt-2">
-                  <button onClick={saveNotes} disabled={isSaving} className="bg-matrix-green text-terminal-bg px-4 py-1 rounded text-sm font-semibold hover:bg-matrix-dark transition-colors disabled:opacity-50">{isSaving ? 'Saving...' : 'Save'}</button>
-                  <button onClick={() => { setIsEditingNotes(false); setEditedNotes(writeup.authorNotes || ''); }} className="text-terminal-muted text-sm hover:text-terminal-text">Cancel</button>
+                  <button onClick={saveNotes} disabled={isSaving} className="bg-purple-500 text-white px-4 py-1 rounded text-sm font-semibold hover:bg-purple-600 transition-colors disabled:opacity-50">{isSaving ? 'Saving...' : 'Save'}</button>
+                  <button onClick={() => { setIsEditingNotes(false); setEditedNotes(writeup.authorNotes || ''); }} className="text-white/60 text-sm hover:text-white">Cancel</button>
                 </div>
               </div>
             ) : (
-              <p className="text-sm text-terminal-text">{writeup.authorNotes || <span className="text-terminal-muted italic">No notes yet</span>}</p>
+              <p className="text-sm text-white">{writeup.authorNotes || <span className="text-white/60 italic">No notes yet</span>}</p>
             )}
           </div>
         )}
-        <div className="pt-6 border-t border-terminal-border flex items-center justify-between">
+        <div className="pt-6 border-t border-purple-500/20 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <button onClick={(e) => onUpvote(writeup.id, e)} className={`flex items-center gap-2 px-4 py-2 rounded transition-all ${hasUpvoted ? 'bg-matrix-green text-terminal-bg' : 'bg-terminal-bg border border-terminal-border text-terminal-muted hover:border-matrix-green hover:text-matrix-green'}`}>
+            <button onClick={(e) => onUpvote(writeup.id, e)} className={`flex items-center gap-2 px-4 py-2 rounded transition-all ${hasUpvoted ? 'bg-purple-500 text-white' : 'bg-[#0a0a0f] border border-purple-500/20 text-white/60 hover:border-purple-400 hover:text-purple-400'}`}>
               <ThumbsUp size={16} /><span className="font-semibold">{writeup.upvotes || 0}</span>
             </button>
           </div>
-          <button onClick={onClose} className="bg-terminal-bg border border-terminal-border text-terminal-muted px-6 py-2 rounded hover:text-terminal-text transition-colors">Close</button>
+          <button onClick={onClose} className="bg-[#0a0a0f] border border-purple-500/20 text-white/60 px-6 py-2 rounded-lg hover:text-white transition-colors">Close</button>
         </div>
       </div>
     </>

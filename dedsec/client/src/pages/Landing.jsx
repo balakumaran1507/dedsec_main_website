@@ -1,8 +1,8 @@
 import { useNavigate } from 'react-router-dom';
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
+import { auth } from '../utils/firebase';
 import PixelBlast from '../components/PixelBlast';
 import MagicBento from '../components/MagicBento';
-import GradualBlur from '../components/GradualBlur';
 import ScrollReveal from '../components/ScrollReveal';
 import DecryptedText from '../components/DecryptedText';
 import ClickSpark from '../components/ClickSpark';
@@ -13,6 +13,16 @@ import PulseBorder from '../components/PulseBorder';
 function Landing() {
   const navigate = useNavigate();
   const joinFormRef = useRef(null);
+
+  // Redirect to dashboard if already logged in
+  useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      if (user) {
+        navigate('/dashboard');
+      }
+    });
+    return () => unsubscribe();
+  }, [navigate]);
 
   // Scroll to join form
   const scrollToJoinForm = () => {
@@ -180,20 +190,6 @@ function Landing() {
         </div>
 
       </section>
-
-      {/* Blur Transition Between Sections */}
-      <div style={{ position: 'relative', height: '8rem', width: '100%', zIndex: 10 }}>
-        <GradualBlur
-          target="parent"
-          position="bottom"
-          height="8rem"
-          strength={1.2}
-          divCount={18}
-          curve="ease-in-out"
-          exponential={false}
-          opacity={1}
-        />
-      </div>
 
       {/* Magic Bento Section */}
       <div className="relative w-full min-h-screen bg-black flex items-center justify-center px-4 py-20">

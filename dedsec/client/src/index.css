@@ -45,7 +45,7 @@ body {
 .terminal-cursor::after {
   content: '█';
   animation: blink 1s infinite;
-  @apply text-matrix-green;
+  color: #8400FF;
 }
 
 @keyframes blink {
@@ -53,16 +53,16 @@ body {
   51%, 100% { opacity: 0; }
 }
 
-/* Glowing green effect for inputs */
+/* Glowing purple effect for inputs */
 input:focus,
 textarea:focus {
-  @apply outline-none ring-2 ring-matrix-green;
+  @apply outline-none ring-2 ring-purple-500/50;
 }
 
 /* Terminal prompt style */
 .prompt::before {
   content: '$ ';
-  @apply text-matrix-green;
+  color: #8400FF;
 }
 
 /* Animation delays for thinking dots */

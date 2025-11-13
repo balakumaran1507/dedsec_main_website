@@ -1,10 +1,34 @@
 import { useState, useEffect, useRef } from 'react';
 import { io } from 'socket.io-client';
 import { Hash, Users, Send } from 'lucide-react';
+import ElectricAvatar from './ElectricAvatar';
+import { getElectricTier } from '../utils/electricTiers';
 
 const CHANNELS = ['general', 'ops', 'intel', 'ai-lab'];
 
-function Chat({ username }) {
+// Test account tier mappings (temporary - should come from database)
+const testAccountTiers = {
+  'nigga@gmail.com': { title: '0x00F5', score: 250 },
+  'balakumaran1507@gmail.com': { title: '0x00FB', score: 650 }
+};
+
+// Helper to get user tier info from email or username
+const getUserTierInfo = (identifier) => {
+  // Try direct email match
+  if (testAccountTiers[identifier]) {
+    return testAccountTiers[identifier];
+  }
+  // Try matching username prefix (e.g., "nigga" -> "nigga@gmail.com")
+  const matchedEmail = Object.keys(testAccountTiers).find(email =>
+    email.split('@')[0] === identifier
+  );
+  if (matchedEmail) {
+    return testAccountTiers[matchedEmail];
+  }
+  return { title: '0x00F1', score: 0 }; // Default entry level
+};
+
+function Chat({ username, userEmail, userData }) {
   const [socket, setSocket] = useState(null);
   const [currentChannel, setCurrentChannel] = useState('general');
   const [messages, setMessages] = useState([]);
@@ -134,8 +158,8 @@ function Chat({ username }) {
                 onClick={() => switchChannel(channel)}
                 className={`w-full text-left px-3 py-2 rounded text-sm transition-colors ${
                   currentChannel === channel
-                    ? 'bg-matrix-dim text-matrix-green font-semibold'
-                    : 'text-terminal-muted hover:text-matrix-green hover:bg-terminal-bg'
+                    ? 'bg-purple-900/30 text-purple-400 font-semibold'
+                    : 'text-white/60 hover:text-purple-400 hover:bg-[#13131a]'
                 }`}
               >
                 # {channel}
@@ -150,13 +174,34 @@ function Chat({ username }) {
             <Users size={14} />
             Online ({onlineUsers.length})
           </h3>
-          <div className="space-y-2">
-            {onlineUsers.map((user, idx) => (
-              <div key={idx} className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-matrix-green animate-pulse"></div>
-                <span className="text-terminal-text text-sm">{user}</span>
-              </div>
-            ))}
+          <div className="space-y-3">
+            {onlineUsers.map((user, idx) => {
+              const tierInfo = getUserTierInfo(user);
+              const electricTier = getElectricTier(tierInfo.title);
+
+              return (
+                <div key={idx} className="flex items-center gap-2">
+                  <ElectricAvatar
+                    src={null}
+                    hexTitle={tierInfo.title}
+                    alt={user}
+                    size="xs"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <div className="text-terminal-text text-sm truncate">{user}</div>
+                    {electricTier.enabled && (
+                      <div
+                        className="text-xs truncate"
+                        style={{ color: electricTier.color }}
+                      >
+                        {electricTier.name}
+                      </div>
+                    )}
+                  </div>
+                  <div className="w-2 h-2 rounded-full bg-purple-400 animate-pulse"></div>
+                </div>
+              );
+            })}
           </div>
         </div>
 
@@ -165,7 +210,7 @@ function Chat({ username }) {
           <div className="flex items-center gap-2 text-xs">
             <div
               className={`w-2 h-2 rounded-full ${
-                isConnected ? 'bg-matrix-green' : 'bg-red-500'
+                isConnected ? 'bg-purple-400' : 'bg-red-500'
               }`}
             ></div>
             <span className="text-terminal-muted">
@@ -179,7 +224,7 @@ function Chat({ username }) {
       <div className="flex-1 flex flex-col h-full overflow-hidden">
         {/* Channel Header */}
         <div className="bg-terminal-card border-b border-terminal-border px-6 py-4">
-          <h2 className="text-lg font-semibold text-matrix-green">
+          <h2 className="text-lg font-semibold text-purple-400" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
             # {currentChannel}
           </h2>
           <p className="text-terminal-muted text-xs mt-1">
@@ -196,23 +241,58 @@ function Chat({ username }) {
             <div key={msg.id}>
               {msg.type === 'system' ? (
                 <div className="text-center text-terminal-muted text-sm italic">
-                  <span className="text-matrix-green">•</span> {msg.content}
+                  <span className="text-purple-400">•</span> {msg.content}
                 </div>
               ) : (
                 <div className="flex gap-3">
-                  <div className="text-terminal-muted text-xs pt-1 min-w-[50px]">
-                    {formatTime(msg.timestamp)}
+                  {/* Avatar */}
+                  <div className="flex-shrink-0">
+                    <ElectricAvatar
+                      src={null}
+                      hexTitle={getUserTierInfo(msg.username).title}
+                      alt={msg.username}
+                      size="sm"
+                    />
                   </div>
+
                   <div className="flex-1">
                     <div className="flex items-baseline gap-2 mb-1">
+                      {/* Username */}
                       <span
                         className={`font-semibold text-sm ${
                           msg.username === username
-                            ? 'text-matrix-green'
+                            ? 'text-purple-400'
                             : 'text-terminal-text'
                         }`}
                       >
                         {msg.username}
+                      </span>
+
+                      {/* Rank Badge */}
+                      {(() => {
+                        const tierInfo = getUserTierInfo(msg.username);
+                        const electricTier = getElectricTier(tierInfo.title);
+
+                        if (electricTier.enabled) {
+                          return (
+                            <span
+                              className="text-xs px-2 py-0.5 rounded border"
+                              style={{
+                                color: electricTier.color,
+                                borderColor: electricTier.color + '40',
+                                backgroundColor: electricTier.color + '10'
+                              }}
+                            >
+                              [{electricTier.name}]
+                            </span>
+                          );
+                        }
+                        return null;
+                      })()}
+
+                      {/* Timestamp */}
+                      <span className="text-terminal-muted text-xs">
+                        {formatTime(msg.timestamp)}
                       </span>
                     </div>
                     <p className="text-terminal-text text-sm leading-relaxed break-words">
@@ -234,13 +314,13 @@ function Chat({ username }) {
               value={messageInput}
               onChange={(e) => setMessageInput(e.target.value)}
               placeholder={`Message #${currentChannel}...`}
-              className="flex-1 bg-terminal-bg border border-terminal-border rounded px-4 py-3 text-terminal-text focus:border-matrix-green transition-colors"
+              className="flex-1 bg-terminal-bg border border-terminal-border rounded px-4 py-3 text-terminal-text focus:border-purple-400 transition-colors"
               disabled={!isConnected}
             />
             <button
               type="submit"
               disabled={!isConnected || !messageInput.trim()}
-              className="bg-matrix-green text-terminal-bg px-6 py-3 rounded font-semibold hover:bg-matrix-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              className="bg-purple-500 text-white px-6 py-3 rounded font-semibold hover:bg-purple-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
               <Send size={18} />
               Send

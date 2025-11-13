@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { auth, db } from '../utils/firebase';
 import {
   collection,
@@ -14,6 +13,7 @@ import {
   serverTimestamp,
   Timestamp
 } from 'firebase/firestore';
+import Layout from '../components/Layout';
 import {
   Shield,
   Users,
@@ -30,7 +30,6 @@ function Admin() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const navigate = useNavigate();
 
   // Real-time data from Firestore
   const [joinRequests, setJoinRequests] = useState([]);
@@ -69,13 +68,11 @@ function Admin() {
         }
 
         setLoading(false);
-      } else {
-        navigate('/');
       }
     });
 
     return () => unsubscribe();
-  }, [navigate]);
+  }, []);
 
   // Set up real-time listener for join requests
   useEffect(() => {
@@ -251,96 +248,82 @@ function Admin() {
 
   if (loading || !user) {
     return (
-      <div className="min-h-screen bg-terminal-bg flex items-center justify-center">
-        <div className="text-matrix-green text-xl">
-          <span className="animate-spin inline-block">⚙️</span> Loading...
+      <Layout>
+        <div className="flex items-center justify-center h-full">
+          <div className="text-purple-400 text-xl">
+            <span className="animate-spin inline-block">⚙️</span> Loading...
+          </div>
         </div>
-      </div>
+      </Layout>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen bg-terminal-bg flex items-center justify-center p-6">
-        <div className="text-center">
-          <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-red-500 mb-2">Error</h2>
-          <p className="text-terminal-muted mb-6">{error}</p>
-          <button
-            onClick={() => navigate('/dashboard')}
-            className="bg-matrix-green text-terminal-bg px-6 py-3 rounded font-semibold hover:bg-matrix-dark transition-colors"
-          >
-            Back to Dashboard
-          </button>
+      <Layout>
+        <div className="flex items-center justify-center h-full p-6">
+          <div className="text-center">
+            <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
+            <h2 className="text-2xl font-bold text-red-500 mb-2">Error</h2>
+            <p className="text-terminal-muted">{error}</p>
+          </div>
         </div>
-      </div>
+      </Layout>
     );
   }
 
   if (!isAdmin) {
     return (
-      <div className="min-h-screen bg-terminal-bg flex items-center justify-center p-6">
-        <div className="text-center">
-          <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-red-500 mb-2">Access Denied</h2>
-          <p className="text-terminal-muted mb-6">You don't have admin permissions.</p>
-          <button
-            onClick={() => navigate('/dashboard')}
-            className="bg-matrix-green text-terminal-bg px-6 py-3 rounded font-semibold hover:bg-matrix-dark transition-colors"
-          >
-            Back to Dashboard
-          </button>
+      <Layout>
+        <div className="flex items-center justify-center h-full p-6">
+          <div className="text-center">
+            <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
+            <h2 className="text-2xl font-bold text-red-500 mb-2">Access Denied</h2>
+            <p className="text-terminal-muted">You don't have admin permissions.</p>
+          </div>
         </div>
-      </div>
+      </Layout>
     );
   }
 
   const pendingRequests = joinRequests.filter(r => r.status === 'pending');
 
   return (
-    <div className="min-h-screen bg-terminal-bg text-terminal-text p-6">
-      {/* Back Button */}
-      <button
-        onClick={() => navigate('/dashboard')}
-        className="mb-6 text-terminal-muted hover:text-matrix-green transition-colors flex items-center gap-2"
-      >
-        ← Back to Dashboard
-      </button>
-
-      <div className="max-w-7xl mx-auto">
+    <Layout>
+      <div className="max-w-7xl mx-auto px-6 py-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-matrix-green mb-2 flex items-center gap-3">
+          <h1 className="text-4xl font-bold text-purple-400 mb-2 flex items-center gap-3" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
             <Shield className="w-10 h-10" />
             Admin Panel
           </h1>
-          <p className="text-terminal-muted">Manage members and join requests</p>
+          <p className="text-white/60">Manage members and join requests</p>
         </div>
 
         {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-terminal-card border border-terminal-border rounded-lg p-6">
+          <div className="bg-[#13131a] border border-purple-500/20 rounded-xl p-6 hover:border-purple-500/40 transition-colors">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-terminal-muted text-sm">Total Members</span>
-              <Users className="w-5 h-5 text-matrix-green" />
+              <span className="text-white/60 text-sm">Total Members</span>
+              <Users className="w-5 h-5 text-purple-400" />
             </div>
-            <div className="text-3xl font-bold text-matrix-green">{members.length}</div>
+            <div className="text-3xl font-bold text-purple-400">{members.length}</div>
           </div>
 
-          <div className="bg-terminal-card border border-terminal-border rounded-lg p-6">
+          <div className="bg-[#13131a] border border-purple-500/20 rounded-xl p-6 hover:border-purple-500/40 transition-colors">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-terminal-muted text-sm">Pending Requests</span>
+              <span className="text-white/60 text-sm">Pending Requests</span>
               <AlertCircle className="w-5 h-5 text-yellow-400" />
             </div>
             <div className="text-3xl font-bold text-yellow-400">{pendingRequests.length}</div>
           </div>
 
-          <div className="bg-terminal-card border border-terminal-border rounded-lg p-6">
+          <div className="bg-[#13131a] border border-purple-500/20 rounded-xl p-6 hover:border-purple-500/40 transition-colors">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-terminal-muted text-sm">Admins</span>
-              <Crown className="w-5 h-5 text-matrix-green" />
+              <span className="text-white/60 text-sm">Admins</span>
+              <Crown className="w-5 h-5 text-purple-400" />
             </div>
-            <div className="text-3xl font-bold text-matrix-green">
+            <div className="text-3xl font-bold text-purple-400">
               {members.filter(m => m.role === 'admin' || m.role === 'owner').length}
             </div>
           </div>
@@ -349,7 +332,7 @@ function Admin() {
         {/* Join Requests */}
         {pendingRequests.length > 0 && (
           <div className="mb-8">
-            <h2 className="text-2xl font-bold text-matrix-green mb-4">Join Requests</h2>
+            <h2 className="text-2xl font-bold text-purple-400 mb-4" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>Join Requests</h2>
             <div className="space-y-4">
               {pendingRequests.map(request => (
                 <JoinRequestCard
@@ -365,17 +348,17 @@ function Admin() {
 
         {/* Members List */}
         <div>
-          <h2 className="text-2xl font-bold text-matrix-green mb-4">Team Members</h2>
-          <div className="bg-terminal-card border border-terminal-border rounded-lg overflow-hidden">
+          <h2 className="text-2xl font-bold text-purple-400 mb-4" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>Team Members</h2>
+          <div className="bg-[#13131a] border border-purple-500/20 rounded-xl overflow-hidden">
             <table className="w-full">
-              <thead className="bg-terminal-bg border-b border-terminal-border">
+              <thead className="bg-[#0a0a0f] border-b border-purple-500/20">
                 <tr>
-                  <th className="text-left p-4 text-terminal-muted text-sm font-semibold">Member</th>
-                  <th className="text-left p-4 text-terminal-muted text-sm font-semibold">Role</th>
-                  <th className="text-left p-4 text-terminal-muted text-sm font-semibold">Level</th>
-                  <th className="text-left p-4 text-terminal-muted text-sm font-semibold">XP</th>
-                  <th className="text-left p-4 text-terminal-muted text-sm font-semibold">Joined</th>
-                  <th className="text-left p-4 text-terminal-muted text-sm font-semibold">Actions</th>
+                  <th className="text-left p-4 text-white/60 text-sm font-semibold">Member</th>
+                  <th className="text-left p-4 text-white/60 text-sm font-semibold">Role</th>
+                  <th className="text-left p-4 text-white/60 text-sm font-semibold">Level</th>
+                  <th className="text-left p-4 text-white/60 text-sm font-semibold">XP</th>
+                  <th className="text-left p-4 text-white/60 text-sm font-semibold">Joined</th>
+                  <th className="text-left p-4 text-white/60 text-sm font-semibold">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-terminal-border">
@@ -392,7 +375,7 @@ function Admin() {
           </div>
         </div>
       </div>
-    </div>
+    </Layout>
   );
 }
 
@@ -419,14 +402,14 @@ function JoinRequestCard({ request, onApprove, onReject }) {
         </div>
       </div>
 
-      <div className="bg-terminal-bg border border-terminal-border rounded p-4 mb-4">
-        <p className="text-terminal-text text-sm">{request.message}</p>
+      <div className="bg-[#13131a] border border-purple-500/20 rounded-xl p-4 mb-4">
+        <p className="text-white text-sm">{request.message}</p>
       </div>
 
       <div className="flex gap-3">
         <button
           onClick={onApprove}
-          className="flex-1 bg-matrix-green text-terminal-bg py-2 rounded font-semibold hover:bg-matrix-dark transition-colors flex items-center justify-center gap-2"
+          className="flex-1 bg-purple-500 text-white py-2 rounded font-semibold hover:bg-purple-600 transition-colors flex items-center justify-center gap-2"
         >
           <UserCheck size={18} />
           Approve
@@ -449,28 +432,26 @@ function MemberRow({ member, onChangeRole, onRemove }) {
     const styles = {
       owner: 'bg-red-900/30 text-red-400 border-red-700',
       admin: 'bg-yellow-900/30 text-yellow-400 border-yellow-700',
-      member: 'bg-matrix-dim text-matrix-green border-matrix-green'
+      member: 'bg-purple-900/30 text-purple-400 border-purple-700'
     };
     return (
       <span className={`text-xs px-3 py-1 rounded border ${styles[role]}`}>
-        {role === 'owner' && '👑 '}
-        {role === 'admin' && '⚡ '}
         {role.toUpperCase()}
       </span>
     );
   };
 
   return (
-    <tr className="hover:bg-terminal-bg transition-colors">
+    <tr className="hover:bg-[#0a0a0f] transition-colors border-b border-purple-500/10 last:border-b-0">
       <td className="p-4">
         <div>
-          <div className="font-semibold text-terminal-text">{member.displayName}</div>
-          <div className="text-xs text-terminal-muted">{member.email}</div>
+          <div className="font-semibold text-white">{member.displayName}</div>
+          <div className="text-xs text-white/60">{member.email}</div>
         </div>
       </td>
       <td className="p-4">{getRoleBadge(member.role)}</td>
-      <td className="p-4 text-terminal-text">Level {member.level}</td>
-      <td className="p-4 text-matrix-green font-semibold">{member.xp} XP</td>
+      <td className="p-4 text-white">Level {member.level}</td>
+      <td className="p-4 text-purple-400 font-semibold">{member.xp} XP</td>
       <td className="p-4 text-terminal-muted text-sm">{member.joinDate}</td>
       <td className="p-4">
         {member.role !== 'owner' && (
@@ -478,7 +459,7 @@ function MemberRow({ member, onChangeRole, onRemove }) {
             <select
               onChange={(e) => onChangeRole(member.uid, e.target.value)}
               value={member.role}
-              className="bg-terminal-bg border border-terminal-border rounded px-2 py-1 text-terminal-text text-xs"
+              className="bg-[#0a0a0f] border border-purple-500/20 rounded-lg px-2 py-1 text-white text-xs focus:border-purple-400 transition-colors"
             >
               <option value="member">Member</option>
               <option value="admin">Admin</option>

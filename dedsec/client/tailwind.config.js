@@ -7,18 +7,18 @@ export default {
   theme: {
     extend: {
       colors: {
-        // DedSec custom color palette
+        // DedSec custom color palette - Dark Purple Theme
         terminal: {
-          bg: '#0a0a0a',        // Deep black background
-          card: '#151515',       // Card/panel background
-          border: '#1a1a1a',     // Subtle borders
-          text: '#e0e0e0',       // Main text
-          muted: '#808080',      // Muted text
+          bg: '#0a0a0f',         // Deep dark with purple tint
+          card: '#13131a',       // Card/panel background with purple tint
+          border: 'rgba(132, 0, 255, 0.2)',  // Subtle purple borders
+          text: '#ffffff',       // Pure white text
+          muted: 'rgba(255, 255, 255, 0.6)', // Muted white text
         },
         matrix: {
-          green: '#00ff41',      // Bright matrix green
-          dark: '#00aa2e',       // Darker green for hover
-          dim: '#004d1a',        // Very dim green for backgrounds
+          green: '#8400FF',      // Primary purple (keeping name for compatibility)
+          dark: '#6b00cc',       // Darker purple for hover
+          dim: 'rgba(132, 0, 255, 0.2)',  // Dim purple for backgrounds
         }
       },
       fontFamily: {
@@ -32,8 +32,8 @@ export default {
       },
       keyframes: {
         glow: {
-          '0%': { boxShadow: '0 0 5px #00ff41, 0 0 10px #00ff41' },
-          '100%': { boxShadow: '0 0 10px #00ff41, 0 0 20px #00ff41, 0 0 30px #00ff41' },
+          '0%': { boxShadow: '0 0 5px rgba(132, 0, 255, 0.5), 0 0 10px rgba(132, 0, 255, 0.3)' },
+          '100%': { boxShadow: '0 0 10px rgba(132, 0, 255, 0.6), 0 0 20px rgba(132, 0, 255, 0.4), 0 0 30px rgba(132, 0, 255, 0.2)' },
         }
       }
     },
